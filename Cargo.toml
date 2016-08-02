@@ -1,0 +1,9 @@
+[package]
+name = "bert-rs"
+version = "0.1.0"
+authors = ["Valeryi Savich <Relrin78@gmail.com>"]
+
+[dependencies]
+anymap = "0.12.0"
+num = "0.1.34"
+lazy_static = "0.2.1"
