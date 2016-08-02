@@ -1,14 +1,11 @@
 // For more information about basic "External Term Format" types you can read
 // on the next page: http://erlang.org/doc/apps/erts/erl_ext_dist.html
-extern crate anymap;
-
 use std::string::String;
 use std::vec::Vec;
 
 use anymap::AnyMap;
 
-
-pub const bert_label: &'static str = "bert";
+pub const BERT_LABEL: &'static str = "bert";
 
 
 // The BERT encoding is identical to Erlang's external term format except that
@@ -31,23 +28,23 @@ pub enum BertType {
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BertNil {}
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BertBoolean {
     data: bool
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BertDictionary {
     data: AnyMap
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BertTime {
     megaseconds: i32,
     seconds: i32,
@@ -55,7 +52,7 @@ pub struct BertTime {
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BertRegex {
     source: Vec<u8>,
     options: Vec<String>

@@ -1,5 +1,7 @@
+extern crate anymap;
+
 pub use types::{
-    bert_label,
+    BERT_LABEL,
 
     BertType,
     BertNil,
@@ -9,5 +11,5 @@ pub use types::{
     BertRegex
 };
 
-mod mapping;
+mod serializers;
 mod types;
