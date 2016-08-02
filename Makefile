@@ -1,6 +1,5 @@
 build:
-    cargo build
+	cargo build
 
 rebuild_all:
-    cargo clean
-    cargo build
+	cargo clean && cargo build

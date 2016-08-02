@@ -1,7 +1,7 @@
 pub use types::{
     bert_label,
 
-    BertTypes,
+    BertType,
     BertNil,
     BertBoolean,
     BertDictionary,
