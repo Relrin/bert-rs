@@ -73,11 +73,11 @@ impl Serialize<String> for Serialiazer {
 
 impl Serialize<bool> for Serialiazer {
     fn to_bert(&self, data: bool) -> Vec<u8> {
-        let boolean_atom = data.to_string();
-        let binary_boolean = self.convert_string_to_binary(boolean_atom);
+        let boolean_string = data.to_string();
+        let binary_boolean = self.convert_string_to_binary(boolean_string);
 
-        let bert_term = self.get_bert_atom();
-        let boolean_term = self.generate_term(BertTag::Atom, binary_boolean);
+        let bert_atom = self.get_bert_atom();
+        let boolean_atom = self.generate_term(BertTag::Atom, binary_boolean);
 
         self.merge_atoms(bert_term, boolean_term)
     }
