@@ -51,8 +51,14 @@ impl Serialiazer {
     fn get_bert_atom(&self) -> Vec<u8> {
         let bert_string = BERT_LABEL.to_string();
         let binary_string = self.convert_string_to_binary(bert_string);
-
         self.generate_term(BertTag::Atom, binary_string)
+    }
+}
+
+
+impl Serialize<u8> for Serialiazer {
+    fn to_bert(&self, data: u8) -> Vec<u8> {
+        self.generate_term(BertTag::SmallInteger, vec![data])
     }
 }
 
