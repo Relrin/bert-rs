@@ -1,9 +1,14 @@
 extern crate anymap;
 
+
+pub use serializers::{
+    Serialiazer,
+    Deserializer
+};
 pub use types::{
     BERT_LABEL,
 
-    BertType,
+    BertTag,
     BertNil,
     BertBoolean,
     BertDictionary,

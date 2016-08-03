@@ -1,17 +1,12 @@
 // For more information about basic "External Term Format" types you can read
 // on the next page: http://erlang.org/doc/apps/erts/erl_ext_dist.html
-use std::string::String;
-use std::vec::Vec;
-
-use anymap::AnyMap;
-
 pub const BERT_LABEL: &'static str = "bert";
 
 
 // The BERT encoding is identical to Erlang's external term format except that
 // it is restricted to the following data type identifiers: 97-100, 104-111.
-#[derive(Debug, PartialEq)]
-pub enum BertType {
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum BertTag {
     SmallInteger = 97, // 97, SMALL_INTEGER_EXT
     Integer = 98,      // 98, INTEGER_EXT
     Float = 99,        // 99, FLOAT_EXT
@@ -33,27 +28,16 @@ pub struct BertNil {}
 
 
 #[derive(Debug)]
-pub struct BertBoolean {
-    data: bool
-}
+pub struct BertBoolean {}
 
 
 #[derive(Debug)]
-pub struct BertDictionary {
-    data: AnyMap
-}
+pub struct BertDictionary {}
 
 
 #[derive(Debug)]
-pub struct BertTime {
-    megaseconds: i32,
-    seconds: i32,
-    microseconds: i32
-}
+pub struct BertTime {}
 
 
 #[derive(Debug)]
-pub struct BertRegex {
-    source: Vec<u8>,
-    options: Vec<String>
-}
+pub struct BertRegex {}
