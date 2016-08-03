@@ -34,8 +34,8 @@ impl Serialiazer {
         binary
     }
 
-    fn convert_string_to_binary(&self, data: String) -> Vec<u8> {
-        let binary_string = data.into_bytes();
+    fn convert_string_to_binary(&self, data: &str) -> Vec<u8> {
+        let binary_string = data.as_bytes();
         let binary_length = binary_string.len() as u8;
         let mut binary = vec![0u8, binary_length];
         binary.extend(binary_string.iter().clone());
@@ -49,8 +49,7 @@ impl Serialiazer {
     }
 
     fn get_bert_atom(&self) -> Vec<u8> {
-        let bert_string = BERT_LABEL.to_string();
-        let binary_string = self.convert_string_to_binary(bert_string);
+        let binary_string = self.convert_string_to_binary(BERT_LABEL);
         self.generate_term(BertTag::Atom, binary_string)
     }
 }
@@ -65,7 +64,7 @@ impl Serialize<u8> for Serialiazer {
 
 impl Serialize<String> for Serialiazer {
     fn to_bert(&self, data: String) -> Vec<u8> {
-        let binary_string = self.convert_string_to_binary(data);
+        let binary_string = self.convert_string_to_binary(&data);
         self.generate_term(BertTag::String, binary_string)
     }
 }
@@ -74,11 +73,11 @@ impl Serialize<String> for Serialiazer {
 impl Serialize<bool> for Serialiazer {
     fn to_bert(&self, data: bool) -> Vec<u8> {
         let boolean_string = data.to_string();
-        let binary_boolean = self.convert_string_to_binary(boolean_string);
+        let binary_boolean = self.convert_string_to_binary(&boolean_string);
 
         let bert_atom = self.get_bert_atom();
         let boolean_atom = self.generate_term(BertTag::Atom, binary_boolean);
 
-        self.merge_atoms(bert_term, boolean_term)
+        self.merge_atoms(bert_atom, boolean_atom)
     }
 }
