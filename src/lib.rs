@@ -1,8 +1,8 @@
-extern crate anymap;
+extern crate byteorder;
 
 
 pub use serializers::{
-    Serialiazer,
+    Serializer,
     Deserializer
 };
 pub use types::{
