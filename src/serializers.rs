@@ -6,6 +6,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use types::{BERT_LABEL, BertTag};
 
 
+// TODO: Wrap complex BERT types into tuples + fix tests
 pub struct Serializer;
 
 
@@ -83,8 +84,7 @@ impl Serialize<i32> for Serializer {
 impl Serialize<f64> for Serializer {
     fn to_bert(&self, data: f64) -> Vec<u8> {
         let string_float: String = data.to_string();
-        let mut binary = self.to_bert(string_float);
-        //binary.write_f64::<BigEndian>(data).unwrap();
+        let binary = self.to_bert(string_float);
         self.generate_term(BertTag::Float, binary)
     }
 }
@@ -93,6 +93,14 @@ impl Serialize<f64> for Serializer {
 impl Serialize<String> for Serializer {
     fn to_bert(&self, data: String) -> Vec<u8> {
         let binary_string = self.convert_string_to_binary(&data);
+        self.generate_term(BertTag::String, binary_string)
+    }
+}
+
+
+impl<'a> Serialize<&'a str> for Serializer {
+    fn to_bert(&self, data: &'a str) -> Vec<u8> {
+        let binary_string = self.convert_string_to_binary(data);
         self.generate_term(BertTag::String, binary_string)
     }
 }
@@ -175,6 +183,23 @@ mod test_serializer {
                 100, 0, 4, 98, 101, 114, 116,      // "bert" as atom
                 100, 0, 5, 102, 97, 108, 115, 101  // "false" as atom
             ]
+        );
+    }
+    
+    #[test]
+    fn test_serialize_string() {
+        let serializer = Serializer::new();
+
+        // string by value
+        assert_eq!(
+            serializer.term_to_binary(String::from("test")),
+            vec![131u8, 107, 0, 4, 116, 101, 115, 116]
+        );
+
+        // string by reference
+        assert_eq!(
+            serializer.term_to_binary("test"),
+            vec![131u8, 107, 0, 4, 116, 101, 115, 116]
         );
     }
 }
