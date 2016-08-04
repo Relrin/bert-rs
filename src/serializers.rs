@@ -1,16 +1,12 @@
 use std::string::String;
 use std::vec::Vec;
 
-// use anymap::AnyMap;
 use byteorder::{BigEndian, WriteBytesExt};
-// use std::any::Any;
 
 use types::{BERT_LABEL, BertTag};
 
 
-pub struct Serializer {
-//    data: Any
-}
+pub struct Serializer;
 
 
 pub struct Deserializer {
@@ -29,6 +25,14 @@ trait Deserialize<T> {
 
 
 impl Serializer {
+
+    pub fn new() -> Serializer {
+        Serializer{}
+    }
+
+    pub fn term_to_binary<T>(&self, data: T) -> Vec<u8> where Self: Serialize<T>{
+        self.to_bert(data)
+    }
 
     pub fn generate_term(&self, tag: BertTag, data: Vec<u8>) -> Vec<u8> {
         let mut binary = vec![tag as u8];
@@ -104,13 +108,27 @@ impl Serialize<bool> for Serializer {
 
 
 #[cfg(test)]
-mod test {
+mod test_serializer {
     use super::{Serializer};
 
     #[test]
     fn test_serialize_bool() {
-        let serializer = Serializer{};
+        let serializer = Serializer::new();
 
-        println!(serializer.to_bert(true), [100, 0, 4, 116, 114, 117, 101])
+        assert_eq!(
+            serializer.term_to_binary(true),
+            vec![
+                100u8, 0, 4, 98, 101, 114, 116,  // "bert" as atom
+                100, 0, 4, 116, 114, 117, 101    // "true" as atom
+            ]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(false),
+            vec![
+                100u8, 0, 4, 98, 101, 114, 116,    // "bert" as atom
+                100, 0, 5, 102, 97, 108, 115, 101  // "false" as atom
+            ]
+        );
     }
 }
