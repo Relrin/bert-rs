@@ -51,23 +51,10 @@ impl Serializer {
         binary
     }
 
-    pub fn merge_atoms(&self, atom_1: Vec<u8>, atom_2: Vec<u8>) -> Vec<u8> {
-        let mut binary: Vec<u8> = atom_1.clone();
-        binary.extend(atom_2.iter().clone());
+    pub fn merge_terms(&self, term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
+        let mut binary: Vec<u8> = term_1.clone();
+        binary.extend(term_2.iter().clone());
         binary
-    }
-
-    pub fn get_small_tuple(&self, arity: u8, elements: Vec<u8>) -> Vec<u8> {
-        let mut binary = vec![arity];
-        binary.extend(elements.iter().clone());
-        self.generate_term(BertTag::SmallTuple, binary)
-    }
-
-    pub fn get_large_tuple(&self, arity: i32, elements: Vec<u8>) -> Vec<u8> {
-        let mut binary = vec![];
-        binary.write_i32::<BigEndian>(arity).unwrap();
-        binary.extend(elements.iter().clone());
-        self.generate_term(BertTag::LargeTuple, binary)
     }
 
     pub fn get_atom(&self, name: Vec<u8>) -> Vec<u8> {
@@ -93,6 +80,19 @@ impl Serializer {
     pub fn get_bert_atom(&self) -> Vec<u8> {
         let binary_string = self.convert_string_to_binary(BERT_LABEL);
         self.get_atom(binary_string)
+    }
+
+    fn get_small_tuple(&self, arity: u8, elements: Vec<u8>) -> Vec<u8> {
+        let mut binary = vec![arity];
+        binary.extend(elements.iter().clone());
+        self.generate_term(BertTag::SmallTuple, binary)
+    }
+
+    fn get_large_tuple(&self, arity: i32, elements: Vec<u8>) -> Vec<u8> {
+        let mut binary = vec![];
+        binary.write_i32::<BigEndian>(arity).unwrap();
+        binary.extend(elements.iter().clone());
+        self.generate_term(BertTag::LargeTuple, binary)
     }
 }
 
@@ -146,7 +146,7 @@ impl Serialize<bool> for Serializer {
         let bert_atom = self.get_bert_atom();
         let boolean_atom = self.get_atom(binary_boolean);
 
-        let binary = self.merge_atoms(bert_atom, boolean_atom);
+        let binary = self.merge_terms(bert_atom, boolean_atom);
         self.get_small_tuple(2, binary)
     }
 }
@@ -269,44 +269,6 @@ mod test_serializer {
             serializer.get_nil(),
             vec![106]
         );
-    }
-
-    #[test]
-    fn test_get_small_tuple() {
-        let serializer = Serializer::new();
-
-        let data = vec![
-            107, 0, 4, 116, 101, 115, 116,  // "test" as string
-            107, 0, 4,  97, 116, 111, 109   // "atom" as string
-        ];
-        assert_eq!(
-            serializer.get_small_tuple(2, data),
-            vec![
-                104,
-                2,                             // tuple length
-                107, 0, 4, 116, 101, 115, 116, // "test" as string
-                107, 0, 4,  97, 116, 111, 109  // "atom" as string
-            ]
-        )
-    }
-
-    #[test]
-    fn test_get_large_tuple() {
-        let serializer = Serializer::new();
-
-        let data = vec![
-            107, 0, 4, 116, 101, 115, 116,  // "test" as string
-            107, 0, 4,  97, 116, 111, 109   // "atom" as string
-        ];
-        assert_eq!(
-            serializer.get_large_tuple(2, data),
-            vec![
-                105,
-                0, 0, 0, 2,                     // tuple length
-                107, 0, 4, 116, 101, 115, 116,  // "test" as string
-                107, 0, 4,  97, 116, 111, 109   // "atom" as string
-            ]
-        )
     }
 
     #[test]
