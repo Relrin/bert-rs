@@ -1,12 +1,15 @@
 extern crate byteorder;
 
-
+pub use errors::{
+    Error
+};
 pub use serializers::{
     Serializer,
     Deserializer
 };
 pub use types::{
     BERT_LABEL,
+    EXT_VERSION,
 
     BertTag,
     BertNil,
@@ -18,3 +21,4 @@ pub use types::{
 
 mod serializers;
 mod types;
+mod errors;
