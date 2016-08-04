@@ -83,9 +83,9 @@ impl Serialize<i32> for Serializer {
 
 impl Serialize<f64> for Serializer {
     fn to_bert(&self, data: f64) -> Vec<u8> {
-        let string_float: String = data.to_string();
-        let binary = self.to_bert(string_float);
-        self.generate_term(BertTag::Float, binary)
+        let mut binary = vec![];
+        binary.write_f64::<BigEndian>(data).unwrap();
+        self.generate_term(BertTag::NewFloat, binary)
     }
 }
 
@@ -164,6 +164,27 @@ mod test_serializer {
     }
 
     #[test]
+    fn test_serializer_f64() {
+        let serializer = Serializer::new();
+
+        assert_eq!(
+            serializer.term_to_binary(-3.14f64),
+            vec![131, 70, 192, 9, 30, 184, 81, 235, 133, 31]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(0.0f64),
+            vec![131, 70, 0, 0, 0, 0, 0, 0, 0, 0]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(3.14f64),
+            vec![131, 70, 64, 9, 30, 184, 81, 235, 133, 31]
+        )
+
+    }
+
+    #[test]
     fn test_serialize_bool() {
         let serializer = Serializer::new();
 
@@ -185,7 +206,7 @@ mod test_serializer {
             ]
         );
     }
-    
+
     #[test]
     fn test_serialize_string() {
         let serializer = Serializer::new();

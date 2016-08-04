@@ -7,9 +7,11 @@ pub const BERT_LABEL: &'static str = "bert";
 // it is restricted to the following data type identifiers: 97-100, 104-111.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum BertTag {
+    NewFloat = 70,     // 70, NEW_FLOAT_EXT
+
     SmallInteger = 97, // 97, SMALL_INTEGER_EXT
     Integer = 98,      // 98, INTEGER_EXT
-    Float = 99,        // 99, FLOAT_EXT
+    Float = 99,        // 99, FLOAT_EXT (deprecated; using for deserialize)
     Atom = 100,        // 100, ATOM_EXT
 
     SmallTuple = 104,  // 104, SMALL_TUPLE_EXT
