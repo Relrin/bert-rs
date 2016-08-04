@@ -30,8 +30,11 @@ impl Serializer {
         Serializer{}
     }
 
-    pub fn term_to_binary<T>(&self, data: T) -> Vec<u8> where Self: Serialize<T>{
-        self.to_bert(data)
+    pub fn term_to_binary<T>(&self, data: T) -> Vec<u8> where Self: Serialize<T> {
+        let mut binary = vec![131u8];
+        let serialized_data = self.to_bert(data);
+        binary.extend(serialized_data.iter().clone());
+        binary
     }
 
     pub fn generate_term(&self, tag: BertTag, data: Vec<u8>) -> Vec<u8> {
@@ -79,8 +82,9 @@ impl Serialize<i32> for Serializer {
 
 impl Serialize<f64> for Serializer {
     fn to_bert(&self, data: f64) -> Vec<u8> {
-        let mut binary = vec![];
-        binary.write_f64::<BigEndian>(data).unwrap();
+        let string_float: String = data.to_string();
+        let mut binary = self.to_bert(string_float);
+        //binary.write_f64::<BigEndian>(data).unwrap();
         self.generate_term(BertTag::Float, binary)
     }
 }
@@ -112,21 +116,63 @@ mod test_serializer {
     use super::{Serializer};
 
     #[test]
+    fn test_serialize_u8() {
+        let serializer = Serializer::new();
+
+        assert_eq!(
+            serializer.term_to_binary(1u8),
+            vec![131u8, 97, 1]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(255u8),
+            vec![131u8, 97, 255]
+        );
+    }
+
+    #[test]
+    fn test_serialize_i32() {
+        let serializer = Serializer::new();
+
+        assert_eq!(
+            serializer.term_to_binary(-2147483648),
+            vec![131u8, 98, 128, 0, 0, 0]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(-1i32),
+            vec![131u8, 98, 255, 255, 255, 255]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(512i32),
+            vec![131u8, 98, 0, 0, 2, 0]
+        );
+
+        assert_eq!(
+            serializer.term_to_binary(2147483647),
+            vec![131u8, 98, 127, 255, 255, 255]
+        );
+    }
+
+    #[test]
     fn test_serialize_bool() {
         let serializer = Serializer::new();
 
         assert_eq!(
             serializer.term_to_binary(true),
             vec![
-                100u8, 0, 4, 98, 101, 114, 116,  // "bert" as atom
-                100, 0, 4, 116, 114, 117, 101    // "true" as atom
+                131u8,
+                100, 0, 4,  98, 101, 114, 116,  // "bert" as atom
+                100, 0, 4, 116, 114, 117, 101   // "true" as atom
             ]
         );
 
         assert_eq!(
             serializer.term_to_binary(false),
             vec![
-                100u8, 0, 4, 98, 101, 114, 116,    // "bert" as atom
+                131u8,
+                100, 0, 4, 98, 101, 114, 116,      // "bert" as atom
                 100, 0, 5, 102, 97, 108, 115, 101  // "false" as atom
             ]
         );
