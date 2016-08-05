@@ -155,6 +155,7 @@ impl Serialize<bool> for Serializer {
 #[cfg(test)]
 mod test_serializer {
     use super::{Serializer};
+    use types::{BertTag};
 
     #[test]
     fn test_serialize_u8() {
@@ -202,17 +203,17 @@ mod test_serializer {
 
         assert_eq!(
             serializer.term_to_binary(-3.14f64),
-            vec![131, 70, 192, 9, 30, 184, 81, 235, 133, 31]
+            vec![131u8, 70, 192, 9, 30, 184, 81, 235, 133, 31]
         );
 
         assert_eq!(
             serializer.term_to_binary(0.0f64),
-            vec![131, 70, 0, 0, 0, 0, 0, 0, 0, 0]
+            vec![131u8, 70, 0, 0, 0, 0, 0, 0, 0, 0]
         );
 
         assert_eq!(
             serializer.term_to_binary(3.14f64),
-            vec![131, 70, 64, 9, 30, 184, 81, 235, 133, 31]
+            vec![131u8, 70, 64, 9, 30, 184, 81, 235, 133, 31]
         )
 
     }
@@ -262,12 +263,60 @@ mod test_serializer {
     }
 
     #[test]
+    fn test_generate_term() {
+        let serializer = Serializer::new();
+
+        let data: Vec<u8> = vec![0, 4, 116, 101, 115, 116];  // bert as string
+        assert_eq!(
+            serializer.generate_term(BertTag::Atom, data),
+            vec![100u8, 0, 4, 116, 101, 115, 116]
+        );
+    }
+
+    #[test]
+    fn test_merge_terms() {
+        let serializer = Serializer::new();
+
+        let term_1: Vec<u8> = vec![100, 0, 4,  98, 101, 114, 116];
+        let term_2: Vec<u8> = vec![100, 0, 3, 110, 105, 108];
+        assert_eq!(
+            serializer.merge_terms(term_1, term_2),
+            vec![
+                100u8, 0, 4, 98, 101, 114, 116,  // "bert" as atom
+                100,   0, 3, 110, 105, 108       // "nil" as atom
+            ]
+        );
+    }
+
+    #[test]
+    fn test_convert_string_to_binary() {
+        let serializer = Serializer::new();
+
+        let data = "bert";
+        assert_eq!(
+            serializer.convert_string_to_binary(data),
+            vec![0u8, 4, 98, 101, 114, 116]
+        );
+    }
+
+    #[test]
+    fn test_get_atom() {
+        let serializer = Serializer::new();
+
+        let data: Vec<u8> = vec![0, 4, 116, 101, 115, 116];  // bert as string
+        assert_eq!(
+            serializer.get_atom(data),
+            vec![100u8, 0, 4, 116, 101, 115, 116]
+        );
+    }
+
+    #[test]
     fn test_get_nil() {
         let serializer = Serializer::new();
 
         assert_eq!(
             serializer.get_nil(),
-            vec![106]
+            vec![106u8]
         );
     }
 
@@ -278,7 +327,7 @@ mod test_serializer {
         assert_eq!(
             serializer.get_bert_nil(),
             vec![
-                104,
+                104u8,
                 2,                              // tuple length
                 100, 0, 4,  98, 101, 114, 116,  // "bert" as atom
                 100, 0, 3, 110, 105, 108        // "nil" as atom
