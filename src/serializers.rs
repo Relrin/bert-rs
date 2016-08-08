@@ -2,7 +2,7 @@ use std::string::String;
 use std::vec::Vec;
 
 use byteorder::{BigEndian, WriteBytesExt};
-use types::{BERT_LABEL, EXT_VERSION, BertTag, BertTuple};
+use types::{BERT_LABEL, EXT_VERSION, BertTag, BertType, BertTuple};
 
 
 pub struct Serializer;
@@ -35,13 +35,13 @@ impl Serializer {
         binary
     }
 
-    pub fn generate_term(&self, tag: BertTag, data: Vec<u8>) -> Vec<u8> {
+    fn generate_term(&self, tag: BertTag, data: Vec<u8>) -> Vec<u8> {
         let mut binary = vec![tag as u8];
         binary.extend(data.iter().clone());
         binary
     }
 
-    pub fn convert_string_to_binary(&self, data: &str) -> Vec<u8> {
+    fn convert_string_to_binary(&self, data: &str) -> Vec<u8> {
         let binary_string = data.as_bytes();
         let binary_length = binary_string.len() as u8;
         let mut binary = vec![0u8, binary_length];
@@ -49,21 +49,21 @@ impl Serializer {
         binary
     }
 
-    pub fn merge_terms(&self, term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
+    fn merge_terms(&self, term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
         let mut binary: Vec<u8> = term_1.clone();
         binary.extend(term_2.iter().clone());
         binary
     }
 
-    pub fn get_atom(&self, name: Vec<u8>) -> Vec<u8> {
+    fn get_atom(&self, name: Vec<u8>) -> Vec<u8> {
         self.generate_term(BertTag::Atom, name)
     }
 
-    pub fn get_nil(&self) -> Vec<u8> {
+    fn get_nil(&self) -> Vec<u8> {
         vec![BertTag::Nil as u8]
     }
 
-    pub fn get_bert_nil(&self) -> Vec<u8> {
+    fn get_bert_nil(&self) -> Vec<u8> {
         let bert_atom = self.get_bert_atom();
 
         let binary_nil_string = self.convert_string_to_binary("nil");
@@ -75,7 +75,7 @@ impl Serializer {
         self.get_small_tuple(2, binary)
     }
 
-    pub fn get_bert_atom(&self) -> Vec<u8> {
+    fn get_bert_atom(&self) -> Vec<u8> {
         let binary_string = self.convert_string_to_binary(BERT_LABEL);
         self.get_atom(binary_string)
     }
@@ -91,6 +91,17 @@ impl Serializer {
         binary.write_i32::<BigEndian>(arity).unwrap();
         binary.extend(elements.iter().clone());
         self.generate_term(BertTag::LargeTuple, binary)
+    }
+
+    fn enum_value_to_binary(&self, enum_value: BertType) -> Vec<u8> {
+        match enum_value {
+            BertType::SmallInteger(value_u8) => self.to_bert(value_u8),
+            BertType::Integer(value_i32) => self.to_bert(value_i32),
+            BertType::Float(value_f64) => self.to_bert(value_f64),
+            BertType::String(string) => self.to_bert(string),
+            BertType::Boolean(boolean) => self.to_bert(boolean),
+            BertType::Tuple(tuple) => self.to_bert(tuple),
+        }
     }
 }
 
@@ -152,9 +163,12 @@ impl Serialize<bool> for Serializer {
 
 impl Serialize<BertTuple> for Serializer {
     fn to_bert(&self, data: BertTuple) -> Vec<u8> {
-        let mut binary: Vec<u8> = data.values.iter().map(|item| self.to_bert(item)).collect();
-
         let arity = data.values.len();
+        let binary: Vec<u8> = data.values
+            .into_iter()
+            .flat_map(|item| self.enum_value_to_binary(item).into_iter())
+            .collect();
+
         match arity {
             0...255 => self.get_small_tuple(arity as u8, binary),
             _ => self.get_large_tuple(arity as i32, binary),

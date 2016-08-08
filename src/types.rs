@@ -36,15 +36,9 @@ pub enum BertType {
     SmallInteger(u8),
     Integer(i32),
     Float(f64),
-    StringValue(String),
+    String(String),
     Boolean(bool),
     Tuple(BertTuple),
-    Dictionary(BertDictionary),
-    List(Vec<BertType>),
-    Binary(Vec<u8>),
-    LargeOrBigNum(BigInt),
-    Time(BertTime),
-    Regex(BertRegex)
 }
 
 
