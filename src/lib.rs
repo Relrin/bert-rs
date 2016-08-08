@@ -1,4 +1,5 @@
 extern crate byteorder;
+extern crate num;
 
 pub use errors::{
     Error
@@ -12,6 +13,8 @@ pub use types::{
     EXT_VERSION,
 
     BertTag,
+    BertType,
+
     BertNil,
     BertBoolean,
     BertDictionary,

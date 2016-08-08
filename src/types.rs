@@ -1,5 +1,10 @@
 // For more information about basic "External Term Format" types you can read
 // on the next page: http://erlang.org/doc/apps/erts/erl_ext_dist.html
+use std::string::String;
+use std::{f64, i32};
+
+use num::bigint::BigInt;
+
 pub const BERT_LABEL: &'static str = "bert";
 pub const EXT_VERSION: u8 = 131u8;
 
@@ -26,21 +31,44 @@ pub enum BertTag {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
+pub enum BertType {
+    SmallInteger(u8),
+    Integer(i32),
+    Float(f64),
+    StringValue(String),
+    Boolean(bool),
+    Tuple(BertTuple),
+    Dictionary(BertDictionary),
+    List(Vec<BertType>),
+    Binary(Vec<u8>),
+    LargeOrBigNum(BigInt),
+    Time(BertTime),
+    Regex(BertRegex)
+}
+
+
+#[derive(Debug, PartialEq)]
 pub struct BertNil {}  // +
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct BertBoolean {} // +
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
+pub struct BertTuple {
+    pub values: Vec<BertType>
+}
+
+
+#[derive(Debug, PartialEq)]
 pub struct BertDictionary {}
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct BertTime {}
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct BertRegex {}

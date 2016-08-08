@@ -2,11 +2,9 @@ use std::string::String;
 use std::vec::Vec;
 
 use byteorder::{BigEndian, WriteBytesExt};
+use types::{BERT_LABEL, EXT_VERSION, BertTag, BertTuple};
 
-use types::{BERT_LABEL, EXT_VERSION, BertTag};
 
-
-// TODO: Error handling
 pub struct Serializer;
 
 
@@ -148,6 +146,19 @@ impl Serialize<bool> for Serializer {
 
         let binary = self.merge_terms(bert_atom, boolean_atom);
         self.get_small_tuple(2, binary)
+    }
+}
+
+
+impl Serialize<BertTuple> for Serializer {
+    fn to_bert(&self, data: BertTuple) -> Vec<u8> {
+        let mut binary: Vec<u8> = data.values.iter().map(|item| self.to_bert(item)).collect();
+
+        let arity = data.values.len();
+        match arity {
+            0...255 => self.get_small_tuple(arity as u8, binary),
+            _ => self.get_large_tuple(arity as i32, binary),
+        }
     }
 }
 
