@@ -43,8 +43,9 @@ impl Serializer {
 
     fn convert_string_to_binary(&self, data: &str) -> Vec<u8> {
         let binary_string = data.as_bytes();
-        let binary_length = binary_string.len() as u8;
-        let mut binary = vec![0u8, binary_length];
+        let binary_length = binary_string.len() as i16;
+        let mut binary = vec![];
+        binary.write_i16::<BigEndian>(binary_length).unwrap();
         binary.extend(binary_string.iter().clone());
         binary
     }
