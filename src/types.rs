@@ -39,6 +39,7 @@ pub enum BertType {
     String(String),
     Boolean(bool),
     Tuple(BertTuple),
+    Atom(String),
 }
 
 

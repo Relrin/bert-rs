@@ -56,7 +56,8 @@ impl Serializer {
         binary
     }
 
-    fn get_atom(&self, name: Vec<u8>) -> Vec<u8> {
+    fn get_atom(&self, name: &str) -> Vec<u8> {
+        let name: Vec<u8> = self.convert_string_to_binary(name);
         self.generate_term(BertTag::Atom, name)
     }
 
@@ -66,9 +67,7 @@ impl Serializer {
 
     fn get_bert_nil(&self) -> Vec<u8> {
         let bert_atom = self.get_bert_atom();
-
-        let binary_nil_string = self.convert_string_to_binary("nil");
-        let nil_atom = self.get_atom(binary_nil_string);
+        let nil_atom = self.get_atom("nil");
 
         let mut binary: Vec<u8> = vec![];
         binary.extend(bert_atom.iter().clone());
@@ -77,8 +76,7 @@ impl Serializer {
     }
 
     fn get_bert_atom(&self) -> Vec<u8> {
-        let binary_string = self.convert_string_to_binary(BERT_LABEL);
-        self.get_atom(binary_string)
+        self.get_atom(BERT_LABEL)
     }
 
     fn get_small_tuple(&self, arity: u8, elements: Vec<u8>) -> Vec<u8> {
@@ -102,6 +100,7 @@ impl Serializer {
             BertType::String(string) => self.to_bert(string),
             BertType::Boolean(boolean) => self.to_bert(boolean),
             BertType::Tuple(tuple) => self.to_bert(tuple),
+            BertType::Atom(atom_name) => self.get_atom(&atom_name)
         }
     }
 }
@@ -151,10 +150,9 @@ impl<'a> Serialize<&'a str> for Serializer {
 impl Serialize<bool> for Serializer {
     fn to_bert(&self, data: bool) -> Vec<u8> {
         let boolean_string = data.to_string();
-        let binary_boolean = self.convert_string_to_binary(&boolean_string);
 
         let bert_atom = self.get_bert_atom();
-        let boolean_atom = self.get_atom(binary_boolean);
+        let boolean_atom = self.get_atom(&boolean_string);
 
         let binary = self.merge_terms(bert_atom, boolean_atom);
         self.get_small_tuple(2, binary)
@@ -181,7 +179,79 @@ impl Serialize<BertTuple> for Serializer {
 #[cfg(test)]
 mod test_serializer {
     use super::{Serializer};
-    use types::{BertTag};
+    use types::{BertTag, BertTuple, BertType};
+
+    #[test]
+    fn test_generate_term() {
+        let serializer = Serializer::new();
+
+        let data: Vec<u8> = vec![0, 4, 116, 101, 115, 116];  // bert as string
+        assert_eq!(
+            serializer.generate_term(BertTag::Atom, data),
+            vec![100u8, 0, 4, 116, 101, 115, 116]
+        );
+    }
+
+    #[test]
+    fn test_merge_terms() {
+        let serializer = Serializer::new();
+
+        let term_1: Vec<u8> = vec![100, 0, 4,  98, 101, 114, 116];
+        let term_2: Vec<u8> = vec![100, 0, 3, 110, 105, 108];
+        assert_eq!(
+            serializer.merge_terms(term_1, term_2),
+            vec![
+                100u8, 0, 4, 98, 101, 114, 116,  // "bert" as atom
+                100,   0, 3, 110, 105, 108       // "nil" as atom
+            ]
+        );
+    }
+
+    #[test]
+    fn test_convert_string_to_binary() {
+        let serializer = Serializer::new();
+
+        let data = "bert";
+        assert_eq!(
+            serializer.convert_string_to_binary(data),
+            vec![0u8, 4, 98, 101, 114, 116]
+        );
+    }
+
+    #[test]
+    fn test_get_atom() {
+        let serializer = Serializer::new();
+
+        assert_eq!(
+            serializer.get_atom("test"),
+            vec![100u8, 0, 4, 116, 101, 115, 116]
+        );
+    }
+
+    #[test]
+    fn test_get_nil() {
+        let serializer = Serializer::new();
+
+        assert_eq!(
+            serializer.get_nil(),
+            vec![106u8]
+        );
+    }
+
+    #[test]
+    fn test_get_bert_nil() {
+        let serializer = Serializer::new();
+
+        assert_eq!(
+            serializer.get_bert_nil(),
+            vec![
+                104u8,
+                2,                              // tuple length
+                100, 0, 4,  98, 101, 114, 116,  // "bert" as atom
+                100, 0, 3, 110, 105, 108        // "nil" as atom
+            ]
+        )
+    }
 
     #[test]
     fn test_serialize_u8() {
@@ -289,75 +359,28 @@ mod test_serializer {
     }
 
     #[test]
-    fn test_generate_term() {
+    fn test_serializer_tuples() {
         let serializer = Serializer::new();
 
-        let data: Vec<u8> = vec![0, 4, 116, 101, 115, 116];  // bert as string
+        // small tuple
+        let small_tuple_data = BertTuple{values: vec![
+            BertType::SmallInteger(1u8), BertType::Integer(4i32),
+            BertType::Float(8.1516f64), BertType::String(String::from("test")),
+            BertType::Atom(String::from("value"))
+        ]};
         assert_eq!(
-            serializer.generate_term(BertTag::Atom, data),
-            vec![100u8, 0, 4, 116, 101, 115, 116]
-        );
-    }
-
-    #[test]
-    fn test_merge_terms() {
-        let serializer = Serializer::new();
-
-        let term_1: Vec<u8> = vec![100, 0, 4,  98, 101, 114, 116];
-        let term_2: Vec<u8> = vec![100, 0, 3, 110, 105, 108];
-        assert_eq!(
-            serializer.merge_terms(term_1, term_2),
-            vec![
-                100u8, 0, 4, 98, 101, 114, 116,  // "bert" as atom
-                100,   0, 3, 110, 105, 108       // "nil" as atom
+            serializer.term_to_binary(small_tuple_data),
+            vec![131u8,
+                 104,                                      // tuple
+                 5,                                        // length
+                 97, 1,                                    // 1 as u8
+                 98, 0, 0, 0, 4,                           // 4 as i32
+                 70, 64, 32, 77, 158, 131, 228, 37, 175,   // 8.1516 as f64
+                 107, 0, 4, 116, 101, 115, 116,            // "test" as string
+                 100, 0, 5, 118, 97, 108, 117, 101         // "value as atom
             ]
         );
-    }
 
-    #[test]
-    fn test_convert_string_to_binary() {
-        let serializer = Serializer::new();
-
-        let data = "bert";
-        assert_eq!(
-            serializer.convert_string_to_binary(data),
-            vec![0u8, 4, 98, 101, 114, 116]
-        );
-    }
-
-    #[test]
-    fn test_get_atom() {
-        let serializer = Serializer::new();
-
-        let data: Vec<u8> = vec![0, 4, 116, 101, 115, 116];  // bert as string
-        assert_eq!(
-            serializer.get_atom(data),
-            vec![100u8, 0, 4, 116, 101, 115, 116]
-        );
-    }
-
-    #[test]
-    fn test_get_nil() {
-        let serializer = Serializer::new();
-
-        assert_eq!(
-            serializer.get_nil(),
-            vec![106u8]
-        );
-    }
-
-    #[test]
-    fn test_get_bert_nil() {
-        let serializer = Serializer::new();
-
-        assert_eq!(
-            serializer.get_bert_nil(),
-            vec![
-                104u8,
-                2,                              // tuple length
-                100, 0, 4,  98, 101, 114, 116,  // "bert" as atom
-                100, 0, 3, 110, 105, 108        // "nil" as atom
-            ]
-        )
+        // large_tuple
     }
 }
