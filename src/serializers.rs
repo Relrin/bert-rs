@@ -181,6 +181,8 @@ mod test_serializer {
     use super::{Serializer};
     use types::{BertTag, BertTuple, BertType};
 
+    use byteorder::{BigEndian, WriteBytesExt};
+
     #[test]
     fn test_generate_term() {
         let serializer = Serializer::new();
@@ -362,14 +364,18 @@ mod test_serializer {
     fn test_serializer_tuples() {
         let serializer = Serializer::new();
 
+        let mut tuple_size: i32;
+        let mut data_sample: Vec<BertType>;
+        let mut serialized_data: Vec<u8>;
+
         // small tuple
-        let small_tuple_data = BertTuple{values: vec![
+        data_sample = vec![
             BertType::SmallInteger(1u8), BertType::Integer(4i32),
             BertType::Float(8.1516f64), BertType::String(String::from("test")),
             BertType::Atom(String::from("value"))
-        ]};
+        ];
         assert_eq!(
-            serializer.term_to_binary(small_tuple_data),
+            serializer.term_to_binary(BertTuple{values: data_sample}),
             vec![131u8,
                  104,                                      // tuple
                  5,                                        // length
@@ -381,6 +387,35 @@ mod test_serializer {
             ]
         );
 
+        // small tuple with max capacity
+        tuple_size = 255;
+        data_sample = vec![];
+        serialized_data = vec![131u8, 104, tuple_size as u8];
+        for _ in 0..tuple_size {
+            data_sample.push(BertType::SmallInteger(1u8));
+
+            serialized_data.push(97); // 97 is ID for u8 type in BERT
+            serialized_data.push(1);  // value
+        }
+        assert_eq!(
+            serializer.term_to_binary(BertTuple{values: data_sample}),
+            serialized_data
+        );
+
         // large_tuple
+        tuple_size = 512;
+        data_sample = vec![];
+        serialized_data = vec![131u8, 105];
+        serialized_data.write_i32::<BigEndian>(tuple_size).unwrap();
+        for _ in 0..tuple_size {
+            data_sample.push(BertType::SmallInteger(1u8));
+
+            serialized_data.push(97); // 97 is ID for u8 type in BERT
+            serialized_data.push(1);  // value
+        }
+        assert_eq!(
+            serializer.term_to_binary(BertTuple{values: data_sample}),
+            serialized_data
+        );
     }
 }
