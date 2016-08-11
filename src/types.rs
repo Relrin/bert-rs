@@ -3,7 +3,7 @@
 use std::string::String;
 use std::{f64, i32};
 
-// use num::bigint::BigInt;
+use num::bigint::BigInt;
 
 pub const BERT_LABEL: &'static str = "bert";
 pub const EXT_VERSION: u8 = 131u8;
@@ -26,8 +26,8 @@ pub enum BertTag {
     String = 107,      // + 107, STRING_EXT
     List = 108,        // + 108, LIST_EXT
     Binary = 109,      // + 109, BINARY_EXT
-    BigNum = 110,      // 110, SMALL_BIG_EXT
-    LargeNum = 111,    // 111, LARGE_BIG_EXT
+    BigNum = 110,      // + 110, SMALL_BIG_EXT
+    LargeNum = 111,    // + 111, LARGE_BIG_EXT
 }
 
 
@@ -42,6 +42,7 @@ pub enum BertType {
     Atom(String),
     Binary(Vec<u8>),
     List(BertList),
+    BigNumber(BigInt),
 }
 
 
