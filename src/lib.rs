@@ -16,8 +16,9 @@ pub use types::{
     BertType,
 
     BertNil,
-    BertBoolean,
     BertDictionary,
+    BertTuple,
+    BertList,
     BertTime,
     BertRegex
 };

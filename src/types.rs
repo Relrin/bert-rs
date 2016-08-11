@@ -3,7 +3,7 @@
 use std::string::String;
 use std::{f64, i32};
 
-use num::bigint::BigInt;
+// use num::bigint::BigInt;
 
 pub const BERT_LABEL: &'static str = "bert";
 pub const EXT_VERSION: u8 = 131u8;
@@ -20,12 +20,12 @@ pub enum BertTag {
     Float = 99,        // + 99, FLOAT_EXT (deprecated; using for deserialize)
     Atom = 100,        // + 100, ATOM_EXT
 
-    SmallTuple = 104,  // 104, SMALL_TUPLE_EXT
-    LargeTuple = 105,  // 105, LARGE_TUPLE_EXT
+    SmallTuple = 104,  // + 104, SMALL_TUPLE_EXT
+    LargeTuple = 105,  // + 105, LARGE_TUPLE_EXT
     Nil = 106,         // + 106, NIL_EXT
     String = 107,      // + 107, STRING_EXT
-    List = 108,        // 108, LIST_EXT
-    Binary = 109,      // 109, BINARY_EXT
+    List = 108,        // + 108, LIST_EXT
+    Binary = 109,      // + 109, BINARY_EXT
     BigNum = 110,      // 110, SMALL_BIG_EXT
     LargeNum = 111,    // 111, LARGE_BIG_EXT
 }
@@ -40,19 +40,23 @@ pub enum BertType {
     Boolean(bool),
     Tuple(BertTuple),
     Atom(String),
+    Binary(Vec<u8>),
+    List(BertList),
 }
 
 
 #[derive(Debug, PartialEq)]
-pub struct BertNil {}  // +
-
-
-#[derive(Debug, PartialEq)]
-pub struct BertBoolean {} // +
+pub struct BertNil {}
 
 
 #[derive(Debug, PartialEq)]
 pub struct BertTuple {
+    pub values: Vec<BertType>
+}
+
+
+#[derive(Debug, PartialEq)]
+pub struct BertList {
     pub values: Vec<BertType>
 }
 
