@@ -224,12 +224,18 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
     }
 
     #[inline]
-    fn serialize_bytes(&mut self, value: &[u8]) -> Result<()> {
-        let mut state = try!(self.serialize_seq(Some(value.len())));
-        for element in value {
-            try!(self.serialize_seq_elt(&mut state, element));
-        }
-        self.serialize_seq_end(state)
+    fn serialize_bytes(&mut self, data: &[u8]) -> Result<()> {
+        let length = data.len();
+
+        let mut header = vec![BertTag::Binary as u8];
+        header.write_i32::<BigEndian>(length as i32).unwrap();
+        try!(self.writer.write_all(header.as_slice()));
+
+        for byte in data {
+            try!(self.writer.write_all(&[*byte]))
+        };
+
+        self.serialize_seq_end(State::Empty)
     }
 
     #[inline]
@@ -495,6 +501,8 @@ pub fn term_to_binary<T> (
 
 #[cfg(test)]
 mod test_serializer {
+    use serde::bytes::{Bytes};
+
     use super::{Serializer, term_to_binary, to_vec};
     use types::{BertTag};
 
@@ -773,33 +781,33 @@ mod test_serializer {
         );
     }
 
+    // TODO: Fix the tests after adding specialization support in Rust
     #[test]
     fn test_serialize_bytes() {
-        let empty_bytes_list: Vec<u8> = vec![];
+        let empty_bytes_list: Bytes = b""[..].into();
 
         assert_eq!(
-            term_to_binary(&empty_bytes_list.as_slice()).unwrap(),
+            term_to_binary(&empty_bytes_list).unwrap(),
             vec![
                 131u8,
-                104,                            // tuple
-                2,                              // tuple length
-                100, 0, 4, 98, 101, 114, 116,   // "bert" as atom
-                100, 0, 3, 110, 105, 108        // "nil" as atom
+                109,         // binary
+                0, 0, 0, 0   // length
             ]
         );
 
-        let bytes_vec = vec![1u8, 2, 3];
+        let bytes_array: Bytes = b"value"[..].into();
 
         assert_eq!(
-            term_to_binary(&bytes_vec.as_slice()).unwrap(),
+            term_to_binary(&bytes_array).unwrap(),
             vec![
                 131u8,
-                108,                            // list
-                0, 0, 0, 3,                     // length
-                97, 1,                          // 1
-                97, 2,                          // 2
-                97, 3,                          // 3
-                106                             // "nil" as atom
+                109,         // binary
+                0, 0, 0, 5,  // length
+                118,         // "v"
+                97,          // "a"
+                108,         // "l"
+                117,         // "u"
+                101          // "e"
             ]
         );
     }
