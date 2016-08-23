@@ -10,6 +10,8 @@ use errors::{Error, Result};
 use types::{BERT_LABEL, EXT_VERSION, BertTag};
 
 
+// TODO: Add support for struct, variants, map
+
 pub enum State {
     Empty,
     First,
@@ -38,29 +40,29 @@ impl<W> Serializer<W> where W: io::Write, {
         self.writer
     }
 
-    fn generate_term(&mut self, tag: BertTag, data: Vec<u8>) -> Result<()> {
+    pub fn generate_term(&mut self, tag: BertTag, data: Vec<u8>) -> Result<()> {
         let header = vec![tag as u8];
         let binary = self.merge_terms(header, data);
         self.writer.write_all(binary.as_slice()).map_err(From::from)
     }
 
-    fn merge_terms(&self, term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
+    pub fn merge_terms(&self, term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
         let mut binary = term_1.clone();
         binary.extend(term_2.iter().clone());
         binary
     }
 
-    fn get_atom(&self, name: &str) -> Vec<u8> {
+    pub fn get_atom(&self, name: &str) -> Vec<u8> {
         let header = vec![BertTag::Atom as u8];
         let name = self.to_binary(name);
         self.merge_terms(header, name)
     }
 
-    fn get_nil(&self) -> Vec<u8> {
+    pub fn get_nil(&self) -> Vec<u8> {
         vec![BertTag::Nil as u8]
     }
 
-    fn get_bert_nil(&self) -> Vec<u8> {
+    pub fn get_bert_nil(&self) -> Vec<u8> {
         let bert_atom = self.get_bert_atom();
         let nil_atom = self.get_atom("nil");
 
@@ -70,22 +72,19 @@ impl<W> Serializer<W> where W: io::Write, {
         self.get_small_tuple(2, binary)
     }
 
-    fn get_bert_atom(&self) -> Vec<u8> {
+    pub fn get_bert_atom(&self) -> Vec<u8> {
         self.get_atom(BERT_LABEL)
+    }
+
+    fn get_empty_tuple(&self) -> Vec<u8> {
+        vec![BertTag::SmallTuple as u8, 0]
     }
 
     fn get_small_tuple(&self, arity: u8, elements: Vec<u8>) -> Vec<u8> {
         let header = vec![BertTag::SmallTuple as u8, arity];
         self.merge_terms(header, elements)
     }
-//
-//    fn get_large_tuple(&self, arity: i32, elements: Vec<u8>) -> Vec<u8> {
-//        let mut binary = vec![];
-//        binary.write_i32::<BigEndian>(arity).unwrap();
-//        binary.extend(elements.iter().clone());
-//        self.generate_term(BertTag::LargeTuple, binary)
-//    }
-//
+
 //    fn get_big_number_sign(&self, sign: Sign) -> u8 {
 //        match sign {
 //            Sign::Plus => 0,
@@ -224,11 +223,13 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
         self.generate_term(BertTag::String, binary_string)
     }
 
-    // -------
-
     #[inline]
     fn serialize_bytes(&mut self, value: &[u8]) -> Result<()> {
-        Err(Error::UnsupportedType)
+        let mut state = try!(self.serialize_seq(Some(value.len())));
+        for element in value {
+            try!(self.serialize_seq_elt(&mut state, element));
+        }
+        self.serialize_seq_end(state)
     }
 
     #[inline]
@@ -251,12 +252,11 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
     }
 
     /// Serialize newtypes without an object wrapper
-    // TODO: That's right?
     #[inline]
     fn serialize_newtype_struct<T>(
         &mut self, _name: &'static str, value: T
     ) -> Result<()> where T: ser::Serialize {
-        value.serialize(self)
+        Err(Error::UnsupportedType)
     }
 
     #[inline]
@@ -281,41 +281,80 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
 
     #[inline]
     fn serialize_seq(&mut self, len: Option<usize>) -> Result<State> {
-        Err(Error::UnsupportedType)
+        match len {
+            Some(0) => {
+                let bert_nil_tuple = self.get_bert_nil();
+                try!(self.writer.write_all(bert_nil_tuple.as_slice()));
+                Ok(State::Empty)
+            },
+            Some(list_length) => {
+                let mut header = vec![BertTag::List as u8];
+                header.write_i32::<BigEndian>(list_length as i32).unwrap();
+                try!(self.writer.write_all(header.as_slice()));
+                Ok(State::First)
+            }
+            None => Ok(State::Empty)
+        }
     }
 
     #[inline]
     fn serialize_seq_elt<T: ser::Serialize>(
         &mut self, state: &mut State, value: T
     ) -> Result<()> where T: ser::Serialize {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_seq_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        match state {
+            State::Empty => Ok(()),
+            _ =>  {
+                let nil = self.get_nil();
+                try!(self.writer.write_all(nil.as_slice()));
+                Ok(())
+            }
+        }
     }
 
     #[inline]
     fn serialize_seq_fixed_size(&mut self, size: usize) -> Result<State> {
-        Err(Error::UnsupportedType)
+        self.serialize_seq(Some(size))
     }
 
     #[inline]
     fn serialize_tuple(&mut self, len: usize) -> Result<State> {
-        Err(Error::UnsupportedType)
+        match len {
+            0 => {
+                let empty_tuple = self.get_empty_tuple();
+                try!(self.writer.write_all(empty_tuple.as_slice()));
+                Ok(State::Empty)
+            },
+            1...255 => {
+                let header = vec![BertTag::SmallTuple as u8, len as u8];
+                try!(self.writer.write_all(header.as_slice()));
+                Ok(State::First)
+            }
+            _ => {
+                let mut header = vec![BertTag::LargeTuple as u8];
+                header.write_i32::<BigEndian>(len as i32).unwrap();
+                try!(self.writer.write_all(header.as_slice()));
+                Ok(State::First)
+            }
+        }
     }
 
     #[inline]
     fn serialize_tuple_elt<T: ser::Serialize>(
         &mut self, state: &mut State, value: T
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_tuple_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        Ok(())
     }
 
     #[inline]
@@ -456,8 +495,6 @@ pub fn term_to_binary<T> (
 
 #[cfg(test)]
 mod test_serializer {
-    use std::iter::FromIterator;
-
     use super::{Serializer, term_to_binary, to_vec};
     use types::{BertTag};
 
@@ -733,6 +770,86 @@ mod test_serializer {
         assert_eq!(
             term_to_binary(&"test").unwrap(),
             vec![131u8, 107, 0, 4, 116, 101, 115, 116]
+        );
+    }
+
+    #[test]
+    fn test_serialize_bytes() {
+        let empty_bytes_list: Vec<u8> = vec![];
+
+        assert_eq!(
+            term_to_binary(&empty_bytes_list.as_slice()).unwrap(),
+            vec![
+                131u8,
+                104,                            // tuple
+                2,                              // tuple length
+                100, 0, 4, 98, 101, 114, 116,   // "bert" as atom
+                100, 0, 3, 110, 105, 108        // "nil" as atom
+            ]
+        );
+
+        let bytes_vec = vec![1u8, 2, 3];
+
+        assert_eq!(
+            term_to_binary(&bytes_vec.as_slice()).unwrap(),
+            vec![
+                131u8,
+                108,                            // list
+                0, 0, 0, 3,                     // length
+                97, 1,                          // 1
+                97, 2,                          // 2
+                97, 3,                          // 3
+                106                             // "nil" as atom
+            ]
+        );
+    }
+
+    #[test]
+    fn test_serialize_tuple() {
+        let small_tuple = (1u8, 4i32, 8.1516f64, String::from("value"));
+
+        assert_eq!(
+            term_to_binary(&small_tuple).unwrap(),
+            vec![
+                131u8,
+                104,                                    // tuple
+                4,                                      // length
+                97, 1,                                  // 1
+                98, 0, 0, 0, 4,                         // 4
+                70, 64, 32, 77, 158, 131, 228, 37, 175, // 8.1516
+                107, 0, 5, 118, 97, 108, 117, 101       // "value" as string
+            ]
+        );
+    }
+
+    #[test]
+    fn test_serialize_list() {
+        let empty_list: Vec<i32> = vec![];
+
+        assert_eq!(
+            term_to_binary(&empty_list).unwrap(),
+            vec![
+                131u8,
+                104,                            // tuple
+                2,                              // tuple length
+                100, 0, 4,  98, 101, 114, 116,  // "bert" as atom
+                100, 0, 3, 110, 105, 108        // "nil" as atom
+            ]
+        );
+
+        let list = [1i32, 2, 3];
+
+        assert_eq!(
+            term_to_binary(&list).unwrap(),
+            vec![
+                131u8,
+                108,                            // list
+                0, 0, 0, 3,                     // length
+                98, 0, 0, 0, 1,                 // 1
+                98, 0, 0, 0, 2,                 // 2
+                98, 0, 0, 0, 3,                 // 3
+                106                             // "nil" as atom
+            ]
         );
     }
 }
