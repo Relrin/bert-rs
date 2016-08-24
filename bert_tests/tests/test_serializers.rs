@@ -19,6 +19,7 @@ fn test_generate_term() {
     );
 }
 
+
 #[test]
 fn test_merge_terms() {
     let mut writer = Vec::with_capacity(128);
@@ -35,6 +36,7 @@ fn test_merge_terms() {
     );
 }
 
+
 #[test]
 fn test_get_atom() {
     let mut writer = Vec::with_capacity(128);
@@ -46,6 +48,7 @@ fn test_get_atom() {
     );
 }
 
+
 #[test]
 fn test_get_nil() {
     let mut writer = Vec::with_capacity(128);
@@ -56,6 +59,7 @@ fn test_get_nil() {
         vec![106u8]
     );
 }
+
 
 #[test]
 fn test_get_bert_nil() {
@@ -73,6 +77,7 @@ fn test_get_bert_nil() {
     );
 }
 
+
 #[test]
 fn test_get_bert_atom() {
     let mut writer = Vec::with_capacity(128);
@@ -83,6 +88,7 @@ fn test_get_bert_atom() {
         vec![100, 0, 4,  98, 101, 114, 116] // "bert" as atom
     );
 }
+
 
 #[test]
 fn test_serialize_bool() {
@@ -109,12 +115,14 @@ fn test_serialize_bool() {
     );
 }
 
+
 #[test]
 #[should_panic]
 fn test_serialize_isize() {
     let value: isize = 100;
     term_to_binary(&value).unwrap();
 }
+
 
 #[test]
 fn test_serialize_i8() {
@@ -139,6 +147,7 @@ fn test_serialize_i8() {
     );
 }
 
+
 #[test]
 fn test_serialize_i16() {
     assert_eq!(
@@ -161,6 +170,7 @@ fn test_serialize_i16() {
         vec![131u8, 98, 0, 0, 127, 255]
     );
 }
+
 
 #[test]
 fn test_serialize_i32() {
@@ -185,11 +195,13 @@ fn test_serialize_i32() {
     );
 }
 
+
 #[test]
 #[should_panic]
 fn test_serialize_i64() {
     term_to_binary(&1000i64).unwrap();
 }
+
 
 #[test]
 fn test_serialize_usize() {
@@ -204,6 +216,7 @@ fn test_serialize_usize() {
     )
 }
 
+
 #[test]
 fn test_serialize_u8() {
     assert_eq!(
@@ -217,11 +230,13 @@ fn test_serialize_u8() {
     );
 }
 
+
 #[test]
 #[should_panic]
 fn test_serialize_u16() {
     term_to_binary(&100u16).unwrap();
 }
+
 
 #[test]
 #[should_panic]
@@ -229,11 +244,13 @@ fn test_serialize_u32() {
     term_to_binary(&100u32).unwrap();
 }
 
+
 #[test]
 #[should_panic]
 fn test_serialize_u64() {
     term_to_binary(&100u64).unwrap();
 }
+
 
 #[test]
 fn test_serialize_f32() {
@@ -253,6 +270,7 @@ fn test_serialize_f32() {
     );
 }
 
+
 #[test]
 fn test_serialize_f64() {
     assert_eq!(
@@ -271,6 +289,7 @@ fn test_serialize_f64() {
     );
 }
 
+
 #[test]
 fn test_serialize_char() {
     assert_eq!(
@@ -278,6 +297,7 @@ fn test_serialize_char() {
         vec![131u8, 107, 0, 1, 97]
     );
 }
+
 
 #[test]
 fn test_serialize_string() {
@@ -318,6 +338,7 @@ fn test_serialize_bytes() {
     );
 }
 
+
 #[test]
 fn test_serialize_tuple() {
     let small_tuple = (1u8, 4i32, 8.1516f64, String::from("value"));
@@ -335,6 +356,7 @@ fn test_serialize_tuple() {
         ]
     );
 }
+
 
 #[test]
 fn test_serialize_list() {
@@ -366,6 +388,7 @@ fn test_serialize_list() {
         ]
     );
 }
+
 
 #[test]
 fn test_serialize_newtype_struct() {
@@ -408,15 +431,22 @@ fn test_serialize_newtype_variant() {
     );
 }
 
-//#[test]
-//fn test_serialize_tuple_struct() {
-//
-//    #[derive(Serialize)]
-//    struct Point2D(i32, i32);
-//    let point = Point2D(1, 2);
-//
-//    assert_eq!(
-//        term_to_binary(&point).unwrap()
-//        vec![]
-//    )
-//}
+#[test]
+fn test_serialize_tuple_struct() {
+
+    #[derive(Serialize)]
+    struct Point2D(i32, i32);
+    let point = Point2D(1, 2);
+
+    assert_eq!(
+        term_to_binary(&point).unwrap(),
+        vec![
+            131u8,
+            105,                                          // tuple
+            0, 0, 0, 3,                                   // length
+            100, 0, 7, 112, 111, 105, 110, 116, 50, 100,  // "point2d" as atom
+            98, 0, 0, 0, 1,                               // 1
+            98, 0, 0, 0, 2                                // 2
+        ]
+    )
+}

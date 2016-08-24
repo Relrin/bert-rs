@@ -379,19 +379,28 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
     fn serialize_tuple_struct(
         &mut self, _name: &'static str, len: usize
     ) -> Result<State> {
-        Err(Error::UnsupportedType)
+        let tuple_size = len + 1; // include name of entity
+        let mut header = vec![BertTag::LargeTuple as u8];
+        header.write_i32::<BigEndian>(tuple_size as i32).unwrap();
+        try!(self.writer.write_all(header.as_slice()));
+
+        let structure_name = self.get_atom(_name);
+        try!(self.writer.write_all(structure_name.as_slice()));
+
+        Ok(State::First)
     }
 
     #[inline]
     fn serialize_tuple_struct_elt<T: ser::Serialize>(
         &mut self, state: &mut State, value: T
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_tuple_struct_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        Ok(())
     }
 
     #[inline]
