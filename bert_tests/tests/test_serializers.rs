@@ -192,10 +192,16 @@ fn test_serialize_i64() {
 }
 
 #[test]
-#[should_panic]
 fn test_serialize_usize() {
     let value: usize = 100;
-    term_to_binary(&value).unwrap();
+
+    assert_eq!(
+        term_to_binary(&value).unwrap(),
+        vec![
+            131u8,
+            98, 0, 0, 0, 100  // 100
+        ]
+    )
 }
 
 #[test]
@@ -362,7 +368,7 @@ fn test_serialize_list() {
 }
 
 #[test]
-fn serialize_newtype_struct() {
+fn test_serialize_newtype_struct() {
 
     #[derive(Serialize)]
     struct Meters(i32);
@@ -379,3 +385,38 @@ fn serialize_newtype_struct() {
         ]
     )
 }
+
+
+#[test]
+fn test_serialize_newtype_variant() {
+
+    #[derive(Serialize)]
+    enum Enum {
+        Inches(u8),
+    }
+    let variant = Enum::Inches(128);
+
+    assert_eq!(
+        term_to_binary(&variant).unwrap(),
+        vec![
+            131u8,
+            104,                                    // tuple
+            2,                                      // length
+            100, 0, 6, 105, 110, 99, 104, 101, 115, // "inches" as atom
+            97, 128                                 // 128
+        ]
+    );
+}
+
+//#[test]
+//fn test_serialize_tuple_struct() {
+//
+//    #[derive(Serialize)]
+//    struct Point2D(i32, i32);
+//    let point = Point2D(1, 2);
+//
+//    assert_eq!(
+//        term_to_binary(&point).unwrap()
+//        vec![]
+//    )
+//}

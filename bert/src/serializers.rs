@@ -178,7 +178,7 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
 
     #[inline]
     fn serialize_usize(&mut self, value: usize) -> Result<()> {
-        Err(Error::UnsupportedType)
+        self.serialize_i32(value as i32)
     }
 
     #[inline]
@@ -258,7 +258,6 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
         self.serialize_str(variant)
     }
 
-    /// Serialize newtypes without an object wrapper
     #[inline]
     fn serialize_newtype_struct<T>(
         &mut self, _name: &'static str, value: T
@@ -277,7 +276,13 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
         &mut self, _name: &'static str, _variant_index: usize,
         variant: &'static str, value: T
     ) -> Result<()> where T: ser::Serialize {
-        Err(Error::UnsupportedType)
+        let header = vec![BertTag::SmallTuple as u8, 2u8];
+        try!(self.writer.write_all(header.as_slice()));
+
+        let structure_name_atom = self.get_atom(variant);
+        try!(self.writer.write_all(structure_name_atom.as_slice()));
+
+        value.serialize(self)
     }
 
     #[inline]
