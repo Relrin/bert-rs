@@ -32,10 +32,6 @@ pub enum BertTag {
 
 
 #[derive(Debug, PartialEq)]
-pub struct BertNil {}
-
-
-#[derive(Debug, PartialEq)]
 pub struct BertTime {}
 
 
