@@ -279,8 +279,14 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
         let header = vec![BertTag::SmallTuple as u8, 2u8];
         try!(self.writer.write_all(header.as_slice()));
 
-        let structure_name_atom = self.get_atom(variant);
-        try!(self.writer.write_all(structure_name_atom.as_slice()));
+        let enum_atom = self.get_atom(_name);
+        try!(self.writer.write_all(enum_atom.as_slice()));
+
+        let variant_header = vec![BertTag::SmallTuple as u8, 2u8];
+        try!(self.writer.write_all(variant_header.as_slice()));
+
+        let variant_atom = self.get_atom(variant);
+        try!(self.writer.write_all(variant_atom.as_slice()));
 
         value.serialize(self)
     }
@@ -408,19 +414,35 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
         &mut self, _name: &'static str, _variant_index: usize,
         variant: &'static str, len: usize
     ) -> Result<State> {
-        Err(Error::UnsupportedType)
+        let mut header = vec![BertTag::LargeTuple as u8];
+        header.write_i32::<BigEndian>(2i32).unwrap();
+        try!(self.writer.write_all(header.as_slice()));
+
+        let enum_name = self.get_atom(_name);
+        try!(self.writer.write_all(enum_name.as_slice()));
+
+        let mut variant_header = vec![BertTag::LargeTuple as u8];
+        let variant_length = len as i32 + 1; // include variant name also
+        variant_header.write_i32::<BigEndian>(variant_length).unwrap();
+        try!(self.writer.write_all(variant_header.as_slice()));
+
+        let variant_name = self.get_atom(variant);
+        try!(self.writer.write_all(variant_name.as_slice()));
+
+        Ok(State::First)
     }
 
     #[inline]
     fn serialize_tuple_variant_elt<T: ser::Serialize>(
         &mut self, state: &mut State, value: T
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_tuple_variant_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        Ok(())
     }
 
     #[inline]

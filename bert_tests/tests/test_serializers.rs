@@ -425,6 +425,9 @@ fn test_serialize_newtype_variant() {
             131u8,
             104,                                    // tuple
             2,                                      // length
+            100, 0, 4, 101, 110, 117, 109,          // "enum" as atom
+            104,                                    // tuple
+            2,                                      // length
             100, 0, 6, 105, 110, 99, 104, 101, 115, // "inches" as atom
             97, 128                                 // 128
         ]
@@ -448,5 +451,31 @@ fn test_serialize_tuple_struct() {
             98, 0, 0, 0, 1,                               // 1
             98, 0, 0, 0, 2                                // 2
         ]
-    )
+    );
+}
+
+
+#[test]
+fn test_serialize_tuple_variant() {
+
+    #[derive(Serialize)]
+    enum Enum {
+        Point2D(i32, i32),
+    }
+    let variant = Enum::Point2D(1, 2);
+
+    assert_eq!(
+        term_to_binary(&variant).unwrap(),
+        vec![
+            131u8,
+            105,                                          // tuple
+            0, 0, 0, 2,                                   // length
+            100, 0, 4, 101, 110, 117, 109,                // "enum" as atom
+            105,                                          // tuple
+            0, 0, 0, 3,                                   // length
+            100, 0, 7, 112, 111, 105, 110, 116, 50, 100,  // "point2d" as atom
+            98, 0, 0, 0, 1,                               // 1
+            98, 0, 0, 0, 2                                // 2
+        ]
+    );
 }
