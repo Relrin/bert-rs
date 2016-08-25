@@ -473,19 +473,35 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
     fn serialize_struct(
         &mut self, _name: &'static str, len: usize
     ) -> Result<State> {
-        Err(Error::UnsupportedType)
+        let mut header = vec![BertTag::LargeTuple as u8];
+        let tuple_length = len as i32 + 1; // include name of structure
+        header.write_i32::<BigEndian>(tuple_length).unwrap();
+        try!(self.writer.write_all(header.as_slice()));
+
+        let structure_name_atom = self.get_atom(_name);
+        try!(self.writer.write_all(structure_name_atom.as_slice()));
+
+        Ok(State::First)
     }
 
     #[inline]
     fn serialize_struct_elt<V: ser::Serialize>(
         &mut self, state: &mut State, key: &'static str, value: V
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+
+        let header = vec![BertTag::SmallTuple as u8, 2u8];
+        try!(self.writer.write_all(header.as_slice()));
+
+        let field_atom = self.get_atom(key);
+        try!(self.writer.write_all(field_atom.as_slice()));
+
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_struct_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        Ok(())
     }
 
     #[inline]
@@ -493,19 +509,42 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
         &mut self, _name: &'static str, _variant_index: usize,
         variant: &'static str, len: usize
     ) -> Result<State> {
-        Err(Error::UnsupportedType)
+        let mut header = vec![BertTag::LargeTuple as u8];
+        header.write_i32::<BigEndian>(2i32).unwrap();
+        try!(self.writer.write_all(header.as_slice()));
+
+        let enum_name = self.get_atom(_name);
+        try!(self.writer.write_all(enum_name.as_slice()));
+
+        let mut variant_header = vec![BertTag::LargeTuple as u8];
+        let variant_length = len as i32 + 1; // include variant name also
+        variant_header.write_i32::<BigEndian>(variant_length).unwrap();
+        try!(self.writer.write_all(variant_header.as_slice()));
+
+        let variant_name = self.get_atom(variant);
+        try!(self.writer.write_all(variant_name.as_slice()));
+
+        Ok(State::First)
     }
 
     #[inline]
     fn serialize_struct_variant_elt<V: ser::Serialize>(
         &mut self, state: &mut State, key: &'static str, value: V
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+
+        let header = vec![BertTag::SmallTuple as u8, 2u8];
+        try!(self.writer.write_all(header.as_slice()));
+
+        let field_atom = self.get_atom(key);
+        try!(self.writer.write_all(field_atom.as_slice()));
+
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_struct_variant_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        Ok(())
     }
 }
 

@@ -479,3 +479,81 @@ fn test_serialize_tuple_variant() {
         ]
     );
 }
+
+
+#[test]
+fn test_serialize_struct() {
+
+    #[derive(Serialize)]
+    struct Color {
+        r: u8,
+        g: u8,
+        b: u8,
+    }
+    let color = Color{r: 128, g: 128, b: 128};
+
+    assert_eq!(
+        term_to_binary(&color).unwrap(),
+        vec![
+            131u8,
+            105,                                // tuple
+            0, 0, 0, 4,                         // length
+            100, 0, 5, 99, 111, 108, 111, 114,  // "color" as atom
+
+            104,                                // tuple
+            2,                                  // length
+            100, 0, 1, 114,                     // "r" as atom
+            97, 128,                            // 128
+
+            104,                                // tuple
+            2,                                  // length
+            100, 0, 1, 103,                     // "g" as atom
+            97, 128,                            // 128
+
+            104,                                // tuple
+            2,                                  // length
+            100, 0, 1, 98,                      // "b" as atom
+            97, 128                             // 128
+        ]
+    );
+}
+
+
+#[test]
+fn test_serialize_struct_variant() {
+
+    #[derive(Serialize)]
+    enum Enum{
+        Color {r: u8, g: u8, b: u8},
+    };
+    let variant = Enum::Color{r: 128, g: 128, b: 128};
+
+    assert_eq!(
+        term_to_binary(&variant).unwrap(),
+        vec![
+            131u8,
+            105,                                // tuple
+            0, 0, 0, 2,                         // length
+            100, 0, 4, 101, 110, 117, 109,      // "enum" as atom
+
+            105,                                // tuple
+            0, 0, 0, 4,                         // length
+            100, 0, 5, 99, 111, 108, 111, 114,  // "color" as atom
+
+            104,                                // tuple
+            2,                                  // length
+            100, 0, 1, 114,                     // "r" as atom
+            97, 128,                            // 128
+
+            104,                                // tuple
+            2,                                  // length
+            100, 0, 1, 103,                     // "g" as atom
+            97, 128,                            // 128
+
+            104,                                // tuple
+            2,                                  // length
+            100, 0, 1, 98,                      // "b" as atom
+            97, 128                             // 128
+        ]
+    );
+}
