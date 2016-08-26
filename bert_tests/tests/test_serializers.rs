@@ -1,9 +1,10 @@
 extern crate serde;
 extern crate bert;
 
-use serde::bytes::{Bytes};
+use std::collections::{HashMap, BTreeMap};
 
 use bert::{Serializer, term_to_binary, BertTag};
+use serde::bytes::{Bytes};
 
 
 #[test]
@@ -117,10 +118,13 @@ fn test_serialize_bool() {
 
 
 #[test]
-#[should_panic]
 fn test_serialize_isize() {
     let value: isize = 100;
-    term_to_binary(&value).unwrap();
+
+    assert_eq!(
+        term_to_binary(&value).unwrap(),
+        vec![131u8, 98, 0, 0, 0, 100]
+    )
 }
 
 
@@ -556,4 +560,57 @@ fn test_serialize_struct_variant() {
             97, 128                             // 128
         ]
     );
+}
+
+
+
+#[test]
+fn test_serialize_map() {
+
+    // empty map
+    let empty_map: HashMap<&str, isize> = HashMap::new();
+
+    assert_eq!(
+        term_to_binary(&empty_map).unwrap(),
+        vec![
+            131u8,
+            104,                            // tuple
+            3,                              // length
+            100, 0, 4, 98, 101, 114, 116,   // "bert" as atom
+            100, 0, 4, 100, 105, 99, 116,   // "dict" as atom
+            106                             // nil as []
+        ]
+    );
+
+    // map with few pairs of elements
+    let mut map: BTreeMap<&str, isize> = BTreeMap::new();
+    map.insert("test", 4);
+    map.insert("value", 5);
+
+    assert_eq!(
+        term_to_binary(&map).unwrap(),
+        vec![
+            131u8,
+            104,                                // tuple
+            3,                                  // length
+            100, 0, 4, 98, 101, 114, 116,       // "bert" as atom
+            100, 0, 4, 100, 105, 99, 116,       // "dict" as atom
+
+            108,                                // list
+            0, 0, 0, 2,                         // length
+
+            104,                                // tuple
+            2,                                  // length
+            107, 0, 4, 116, 101, 115, 116,      // "value" as string
+            98, 0, 0, 0, 4,                     // 4
+
+            104,                                // tuple
+            2,                                  // length
+            107, 0, 5, 118, 97, 108, 117, 101,  // "value" as string
+            98, 0, 0, 0, 5,                     // 5
+
+            106                                 // nil
+        ]
+    );
+
 }

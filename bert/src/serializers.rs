@@ -12,6 +12,8 @@ use types::{BERT_LABEL, EXT_VERSION, BertTag};
 
 // TODO: Add support for map, BertTime, BertRegex
 
+#[doc(hidden)]
+#[derive(Eq, PartialEq)]
 pub enum State {
     Empty,
     First,
@@ -150,7 +152,7 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
 
     #[inline]
     fn serialize_isize(&mut self, value: isize) -> Result<()> {
-        Err(Error::UnsupportedType)
+        self.serialize_i32(value as i32)
     }
 
     #[inline]
@@ -447,26 +449,58 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
 
     #[inline]
     fn serialize_map(&mut self, len: Option<usize>) -> Result<State> {
-        Err(Error::UnsupportedType)
+        let mut header = vec![BertTag::SmallTuple as u8, 3u8];
+        let bert_atom = self.get_bert_atom();
+        let dict_atom = self.get_atom("dict");
+
+        try!(self.writer.write_all(header.as_slice()));
+        try!(self.writer.write_all(bert_atom.as_slice()));
+        try!(self.writer.write_all(dict_atom.as_slice()));
+
+        let mut list_header: Vec<u8> = vec![];
+
+        let state = match len {
+            Some(0) | None => {
+                list_header.push(BertTag::Nil as u8);
+                Ok(State::Empty)
+            },
+            Some(length) => {
+                list_header.push(BertTag::List as u8);
+                list_header.write_i32::<BigEndian>(length as i32).unwrap();
+                Ok(State::First)
+            }
+        };
+
+        try!(self.writer.write_all(list_header.as_slice()));
+        state
     }
 
     #[inline]
     fn serialize_map_key<T: ser::Serialize>(
         &mut self, state: &mut State, key: T,
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        *state = State::Rest;
+
+        let tuple_header = vec![BertTag::SmallTuple as u8, 2u8];
+        try!(self.writer.write_all(tuple_header.as_slice()));
+        key.serialize(self);
+        Ok(())
     }
 
     #[inline]
     fn serialize_map_value<T: ser::Serialize>(
         &mut self, _: &mut State, value: T
     ) -> Result<()> {
-        Err(Error::UnsupportedType)
+        value.serialize(self)
     }
 
     #[inline]
     fn serialize_map_end(&mut self, state: State) -> Result<()> {
-        Err(Error::UnsupportedType)
+        if state == State::Rest {
+            let nil_atom = self.get_nil();
+            try!(self.writer.write_all(nil_atom.as_slice()));
+        }
+        Ok(())
     }
 
     #[inline]
