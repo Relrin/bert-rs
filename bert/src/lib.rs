@@ -9,9 +9,10 @@ pub use errors::{Error, Result};
 pub use serializers::{Serializer, term_to_binary, to_vec, to_writer};
 pub use types::{
     BERT_LABEL, EXT_VERSION,
-    BertTag, BertTime, BertRegex
+    BertTag, BertBigInteger, BertTime, BertRegex
 };
 
 mod serializers;
 mod types;
 mod errors;
+mod wrappers;

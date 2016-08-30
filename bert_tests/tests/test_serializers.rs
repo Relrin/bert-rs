@@ -1,9 +1,14 @@
-extern crate serde;
 extern crate bert;
+extern crate num;
+extern crate serde;
 
 use std::collections::{HashMap, BTreeMap};
 
-use bert::{Serializer, term_to_binary, BertTag};
+use bert::{
+    Serializer, term_to_binary,
+    BertTag, BertBigInteger
+};
+use num::bigint::{BigInt};
 use serde::bytes::{Bytes};
 
 
@@ -612,5 +617,22 @@ fn test_serialize_map() {
             106                                 // nil
         ]
     );
+}
 
+
+#[test]
+fn test_serialize_bignum() {
+    let positive_bignum = BertBigInteger(BigInt::from(1000i32));
+
+    assert_eq!(
+        term_to_binary(&positive_bignum).unwrap(),
+        vec![131u8, 110, 2, 0, 232, 3]
+    );
+
+    let negative_bignum = BertBigInteger(BigInt::from(-1000i32));
+
+    assert_eq!(
+        term_to_binary(&negative_bignum).unwrap(),
+        vec![131u8, 110, 2, 1, 232, 3]
+    );
 }
