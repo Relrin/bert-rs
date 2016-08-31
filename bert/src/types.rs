@@ -44,10 +44,35 @@ impl Deref for BertBigInteger {
 
 
 #[derive(Debug, PartialEq)]
-pub struct BertTime {
-    megaseconds: i32,
-    seconds: i32,
-    microseconds: i32,
+pub struct BertTime(TimeStruct);
+
+
+impl BertTime {
+    pub fn new(megaseconds: i32, seconds: i32, microseconds: i32) -> BertTime {
+        BertTime(
+            TimeStruct{
+                megaseconds: megaseconds,
+                seconds: seconds,
+                microseconds: microseconds
+            }
+        )
+    }
+}
+
+
+#[derive(Debug, PartialEq)]
+pub struct TimeStruct {
+    pub megaseconds: i32,
+    pub seconds: i32,
+    pub microseconds: i32,
+}
+
+
+impl Deref for BertTime {
+    type Target = TimeStruct;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 

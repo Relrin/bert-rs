@@ -6,7 +6,7 @@ use serde::ser;
 
 use errors::{Error, Result};
 use types::{BERT_LABEL, EXT_VERSION, BertTag};
-use wrappers::{BIGNUM_STRUCT_NAME};
+use wrappers::{BIGNUM_STRUCT_NAME, TIME_STRUCT_NAME};
 
 
 // TODO: Add support for BertTime, BertRegex
@@ -787,14 +787,25 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
     fn serialize_struct(
         &mut self, _name: &'static str, len: usize
     ) -> Result<State> {
-        let mut header = vec![BertTag::LargeTuple as u8];
-        let tuple_length = len as i32 + 1; // include name of structure
-        header.write_i32::<BigEndian>(tuple_length).unwrap();
-        try!(self.writer.write_all(header.as_slice()));
+        match _name {
+            TIME_STRUCT_NAME => {
+                let bert_atom = self.get_bert_atom();
+                let time_atom = self.get_atom("time");
+                let header = vec![BertTag::SmallTuple as u8, len as u8];
+                try!(self.writer.write_all(header.as_slice()));
+                try!(self.writer.write_all(bert_atom.as_slice()));
+                try!(self.writer.write_all(time_atom.as_slice()));
+            }
+            _ => {
+                let mut header = vec![BertTag::LargeTuple as u8];
+                let tuple_length = len as i32 + 1;
+                header.write_i32::< BigEndian >(tuple_length).unwrap();
+                try!(self.writer.write_all(header.as_slice()));
 
-        let structure_name_atom = self.get_atom(_name);
-        try!(self.writer.write_all(structure_name_atom.as_slice()));
-
+                let structure_name_atom = self.get_atom(_name);
+                try!(self.writer.write_all(structure_name_atom.as_slice()));
+            }
+        }
         Ok(State::First)
     }
 

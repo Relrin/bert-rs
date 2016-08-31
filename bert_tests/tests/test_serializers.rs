@@ -6,7 +6,7 @@ use std::collections::{HashMap, BTreeMap};
 
 use bert::{
     Serializer, term_to_binary,
-    BertTag, BertBigInteger
+    BertTag, BertBigInteger, BertTime
 };
 use num::bigint::{BigInt};
 use serde::bytes::{Bytes};
@@ -635,4 +635,24 @@ fn test_serialize_bignum() {
         term_to_binary(&negative_bignum).unwrap(),
         vec![131u8, 110, 2, 1, 232, 3]
     );
+}
+
+
+#[test]
+fn test_serialize_bert_time() {
+    let time = BertTime::new(1255, 295581, 446228);
+
+    assert_eq!(
+        term_to_binary(&time).unwrap(),
+        vec![
+            131u8,
+            104,                            // tuple
+            5,                              // length
+            100, 0, 4, 98, 101, 114, 116,   // "bert" as atom
+            100, 0, 4, 116, 105, 109, 101,  // "time" as atom
+            98, 0, 0, 4, 231,               // 1255
+            98, 0, 4, 130, 157,             // 295581
+            98, 0, 6, 207, 20               // 446228
+        ]
+    )
 }
