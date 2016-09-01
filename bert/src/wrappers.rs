@@ -7,11 +7,12 @@ use num::bigint::{Sign};
 use serde::bytes;
 use serde::ser;
 
-use types::{BertTag, BertBigInteger, BertTime};
+use types::{BertTag, BertBigInteger, BertTime, BertRegex};
 
 
 pub const BIGNUM_STRUCT_NAME: &'static str = "_BertBigNumber";
 pub const TIME_STRUCT_NAME: &'static str = "_BertTimeStruct";
+pub const REGEX_STRUCT_NAME: &'static str = "_BertRegexStruct";
 
 
 impl ser::Serialize for BertBigInteger {
@@ -52,6 +53,17 @@ impl ser::Serialize for BertTime {
         serializer.serialize_i32(self.megaseconds).unwrap();
         serializer.serialize_i32(self.seconds).unwrap();
         serializer.serialize_i32(self.microseconds).unwrap();
+        Ok(())
+    }
+}
+
+
+impl ser::Serialize for BertRegex {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        where S: ser::Serializer
+    {
+        serializer.serialize_struct(REGEX_STRUCT_NAME, 4 as usize).unwrap();
+        serializer.serialize_str(&self.source).unwrap();
         Ok(())
     }
 }

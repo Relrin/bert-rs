@@ -6,7 +6,8 @@ use std::collections::{HashMap, BTreeMap};
 
 use bert::{
     Serializer, term_to_binary,
-    BertTag, BertBigInteger, BertTime
+    BertTag, BertBigInteger, BertTime,
+    merge_terms, get_atom, get_nil, get_bert_nil, get_bert_atom
 };
 use num::bigint::{BigInt};
 use serde::bytes::{Bytes};
@@ -28,13 +29,10 @@ fn test_generate_term() {
 
 #[test]
 fn test_merge_terms() {
-    let mut writer = Vec::with_capacity(128);
-    let bert = Serializer::new(&mut writer);
-
     let term_1: Vec<u8> = vec![100, 0, 4,  98, 101, 114, 116];
     let term_2: Vec<u8> = vec![100, 0, 3, 110, 105, 108];
     assert_eq!(
-        bert.merge_terms(term_1, term_2),
+        merge_terms(term_1, term_2),
         vec![
             100u8, 0, 4, 98, 101, 114, 116,  // "bert" as atom
             100,   0, 3, 110, 105, 108       // "nil" as atom
@@ -45,11 +43,8 @@ fn test_merge_terms() {
 
 #[test]
 fn test_get_atom() {
-    let mut writer = Vec::with_capacity(128);
-    let bert = Serializer::new(&mut writer);
-
     assert_eq!(
-        bert.get_atom("test"),
+        get_atom("test"),
         vec![100u8, 0, 4, 116, 101, 115, 116]
     );
 }
@@ -57,11 +52,8 @@ fn test_get_atom() {
 
 #[test]
 fn test_get_nil() {
-    let mut writer = Vec::with_capacity(128);
-    let bert = Serializer::new(&mut writer);
-
     assert_eq!(
-        bert.get_nil(),
+        get_nil(),
         vec![106u8]
     );
 }
@@ -69,11 +61,8 @@ fn test_get_nil() {
 
 #[test]
 fn test_get_bert_nil() {
-    let mut writer = Vec::with_capacity(128);
-    let bert = Serializer::new(&mut writer);
-
     assert_eq!(
-        bert.get_bert_nil(),
+        get_bert_nil(),
         vec![
             104u8,
             2,                              // tuple length
@@ -86,11 +75,8 @@ fn test_get_bert_nil() {
 
 #[test]
 fn test_get_bert_atom() {
-    let mut writer = Vec::with_capacity(128);
-    let bert = Serializer::new(&mut writer);
-
     assert_eq!(
-        bert.get_bert_atom(),
+        get_bert_atom(),
         vec![100, 0, 4,  98, 101, 114, 116] // "bert" as atom
     );
 }

@@ -1,5 +1,6 @@
 // For more information about basic "External Term Format" types you can read
 // on the next page: http://erlang.org/doc/apps/erts/erl_ext_dist.html
+use std::string::String;
 use std::ops::Deref;
 use std::{i32};
 
@@ -77,4 +78,28 @@ impl Deref for BertTime {
 
 
 #[derive(Debug, PartialEq)]
-pub struct BertRegex {}
+pub struct BertRegex(RegexStruct);
+
+
+impl Deref for BertRegex {
+    type Target = RegexStruct;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+
+#[derive(Debug, PartialEq)]
+pub struct RegexStruct {
+    pub source: String,
+    pub options: Vec<RegexOption>
+}
+
+
+#[derive(Debug, PartialEq)]
+pub enum RegexOption {
+    Verbose,
+    Ignorecase,
+    Multiline,
+    DotAll
+}
