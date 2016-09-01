@@ -1,8 +1,8 @@
 build:
-	cargo build
+	cd bert && cargo build
 
 rebuild_all:
-	cargo clean && cargo build
+	cd bert && cargo clean && cargo build
 
 test:
-	cargo test
+	cd bert_tests && rustup run nightly cargo test --no-default-features --features serde_macros
