@@ -61,14 +61,6 @@ impl BertTime {
 }
 
 
-#[derive(Debug, PartialEq)]
-pub struct TimeStruct {
-    pub megaseconds: i32,
-    pub seconds: i32,
-    pub microseconds: i32,
-}
-
-
 impl Deref for BertTime {
     type Target = TimeStruct;
     fn deref(&self) -> &Self::Target {
@@ -78,7 +70,27 @@ impl Deref for BertTime {
 
 
 #[derive(Debug, PartialEq)]
+pub struct TimeStruct {
+    pub megaseconds: i32,
+    pub seconds: i32,
+    pub microseconds: i32,
+}
+
+
+#[derive(Debug, PartialEq)]
 pub struct BertRegex(RegexStruct);
+
+
+impl BertRegex {
+    pub fn new(source: &str, options: Vec<RegexOption>) -> BertRegex {
+        BertRegex(
+            RegexStruct{
+                source: source.to_string(),
+                options: options,
+            }
+        )
+    }
+}
 
 
 impl Deref for BertRegex {
@@ -96,10 +108,11 @@ pub struct RegexStruct {
 }
 
 
-#[derive(Debug, PartialEq)]
-pub enum RegexOption {
-    Verbose,
-    Ignorecase,
-    Multiline,
-    DotAll
-}
+enum_str!(
+    RegexOption {
+        Extended("extended"),
+        Caseless("caseless"),
+        Multiline("multiline"),
+        DotAll("dotall"),
+    }
+);

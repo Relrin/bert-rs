@@ -13,6 +13,7 @@ use types::{BertTag, BertBigInteger, BertTime, BertRegex};
 pub const BIGNUM_STRUCT_NAME: &'static str = "_BertBigNumber";
 pub const TIME_STRUCT_NAME: &'static str = "_BertTimeStruct";
 pub const REGEX_STRUCT_NAME: &'static str = "_BertRegexStruct";
+pub const REGEX_OPTION_ENUM_NAME: &'static str = "_BertRegexOptionsEnum";
 
 
 impl ser::Serialize for BertBigInteger {
@@ -64,6 +65,9 @@ impl ser::Serialize for BertRegex {
     {
         serializer.serialize_struct(REGEX_STRUCT_NAME, 4 as usize).unwrap();
         serializer.serialize_str(&self.source).unwrap();
+        serializer.serialize_newtype_struct(
+            REGEX_OPTION_ENUM_NAME, &self.options
+        ).unwrap();
         Ok(())
     }
 }

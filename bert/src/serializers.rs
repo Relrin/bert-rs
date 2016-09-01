@@ -10,7 +10,10 @@ use utils::{
     merge_terms, str_to_binary, get_atom, get_nil, get_bert_nil,
     get_bert_atom, get_empty_tuple, get_small_tuple
 };
-use wrappers::{BIGNUM_STRUCT_NAME, TIME_STRUCT_NAME, REGEX_STRUCT_NAME};
+use wrappers::{
+    BIGNUM_STRUCT_NAME, TIME_STRUCT_NAME, REGEX_STRUCT_NAME,
+    REGEX_OPTION_ENUM_NAME
+};
 
 
 #[doc(hidden)]
@@ -317,6 +320,320 @@ impl<W> ser::Serializer for BigNumSerializer<W> where W: io::Write {
 }
 
 
+// Serializer for the Vec<RegexOption> type. Only for internal use.
+struct RegexOptionSerializer<W>{
+    writer: W
+}
+
+
+impl<W> RegexOptionSerializer<W> where W: io::Write, {
+    pub fn new(writer: W) -> RegexOptionSerializer<W> {
+        RegexOptionSerializer{writer: writer}
+    }
+}
+
+
+impl<W> ser::Serializer for RegexOptionSerializer<W> where W: io::Write {
+    type Error = Error;
+
+    type SeqState = State;
+    type TupleState = State;
+    type TupleStructState = State;
+    type TupleVariantState = State;
+    type MapState = State;
+    type StructState = State;
+    type StructVariantState = State;
+
+    #[inline]
+    fn serialize_bool(&mut self, _value: bool) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_isize(&mut self, _value: isize) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_i8(&mut self, _value: i8) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_i16(&mut self, _value: i16) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_i32(&mut self, _value: i32) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_i64(&mut self, _value: i64) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_usize(&mut self, _value: usize) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_u8(&mut self, _value: u8) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_u16(&mut self, _value: u16) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_u32(&mut self, _value: u32) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_u64(&mut self, _value: u64) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_f32(&mut self, _value: f32) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_f64(&mut self, _value: f64) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_char(&mut self, _value: char) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_str(&mut self, value: &str) -> Result<()> {
+        let value = get_atom(value);
+        self.writer.write_all(value.as_slice()).map_err(From::from)
+    }
+
+    #[inline]
+    fn serialize_bytes(&mut self, _data: &[u8]) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_unit(&mut self) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_unit_struct(&mut self, _name: &'static str) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_unit_variant(
+        &mut self, _name: &'static str, _variant_index: usize,
+        _variant: &'static str
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_newtype_struct<T>(
+        &mut self, _name: &'static str, _value: T
+    ) -> Result<()> where T: ser::Serialize {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_newtype_variant<T>(
+        &mut self, _name: &'static str, _variant_index: usize,
+        _variant: &'static str, _value: T
+    ) -> Result<()> where T: ser::Serialize {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_none(&mut self) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_some<T>(
+        &mut self, _value: T
+    ) -> Result<()> where T: ser::Serialize {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_seq(&mut self, len: Option<usize>) -> Result<State> {
+        match len {
+            Some(0) => {
+                let bert_nil_tuple = get_bert_nil();
+                try!(self.writer.write_all(bert_nil_tuple.as_slice()));
+                Ok(State::Empty)
+            },
+            Some(list_length) => {
+                let mut header = vec![BertTag::List as u8];
+                header.write_i32::<BigEndian>(list_length as i32).unwrap();
+                try!(self.writer.write_all(header.as_slice()));
+                Ok(State::First)
+            }
+            None => Ok(State::Empty)
+        }
+    }
+
+    #[inline]
+    fn serialize_seq_elt<T: ser::Serialize>(
+        &mut self, state: &mut State, value: T
+    ) -> Result<()> where T: ser::Serialize {
+        *state = State::Rest;
+        value.serialize(self)
+    }
+
+    #[inline]
+    fn serialize_seq_end(&mut self, state: State) -> Result<()> {
+        match state {
+            State::Empty => Ok(()),
+            _ =>  {
+                let nil = get_nil();
+                try!(self.writer.write_all(nil.as_slice()));
+                Ok(())
+            }
+        }
+    }
+
+    #[inline]
+    fn serialize_seq_fixed_size(&mut self, _size: usize) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple(&mut self, _len: usize) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_elt<T: ser::Serialize>(
+        &mut self, _state: &mut State, _value: T
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_end(&mut self, _state: State) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_struct(
+        &mut self, _name: &'static str, _len: usize
+    ) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_struct_elt<T: ser::Serialize>(
+        &mut self, _state: &mut State, _value: T
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_struct_end(&mut self, _state: State) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_variant(
+        &mut self, _name: &'static str, _variant_index: usize,
+        _variant: &'static str, _len: usize
+    ) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_variant_elt<T: ser::Serialize>(
+        &mut self, _state: &mut State, _value: T
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_tuple_variant_end(&mut self, _state: State) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_map(&mut self, _len: Option<usize>) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_map_key<T: ser::Serialize>(
+        &mut self, _state: &mut State, _key: T,
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_map_value<T: ser::Serialize>(
+        &mut self, _: &mut State, _value: T
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_map_end(&mut self, _state: State) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_struct(
+        &mut self, _name: &'static str, _len: usize
+    ) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_struct_elt<V: ser::Serialize>(
+        &mut self, _state: &mut State, _key: &'static str, _value: V
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_struct_end(&mut self, _state: State) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_struct_variant(
+        &mut self, _name: &'static str, _variant_index: usize,
+        _variant: &'static str, _len: usize
+    ) -> Result<State> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_struct_variant_elt<V: ser::Serialize>(
+        &mut self, _state: &mut State, _key: &'static str, _value: V
+    ) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+
+    #[inline]
+    fn serialize_struct_variant_end(&mut self, _state: State) -> Result<()> {
+        Err(Error::UnsupportedType)
+    }
+}
+
+
 
 pub struct Serializer<W>{
     writer: W
@@ -486,6 +803,12 @@ impl<W> ser::Serializer for Serializer<W> where W: io::Write {
                     &mut self.writer
                 );
                 value.serialize(&mut bignum_serializer)
+            },
+            REGEX_OPTION_ENUM_NAME => {
+                let mut regex_options_serializer = RegexOptionSerializer::new(
+                    &mut self.writer
+                );
+                value.serialize(&mut regex_options_serializer)
             },
             _ => {
                 let header = vec![BertTag::SmallTuple as u8, 2u8];

@@ -19,8 +19,10 @@ pub use utils::{
 };
 
 
+#[macro_use]
+mod enum_macro;
+mod errors;
 mod serializers;
 mod types;
-mod errors;
 mod wrappers;
 mod utils;

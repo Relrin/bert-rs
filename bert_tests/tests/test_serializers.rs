@@ -6,7 +6,7 @@ use std::collections::{HashMap, BTreeMap};
 
 use bert::{
     Serializer, term_to_binary,
-    BertTag, BertBigInteger, BertTime,
+    BertTag, BertBigInteger, BertTime, BertRegex, RegexOption,
     merge_terms, get_atom, get_nil, get_bert_nil, get_bert_atom
 };
 use num::bigint::{BigInt};
@@ -639,6 +639,33 @@ fn test_serialize_bert_time() {
             98, 0, 0, 4, 231,               // 1255
             98, 0, 4, 130, 157,             // 295581
             98, 0, 6, 207, 20               // 446228
+        ]
+    )
+}
+
+
+#[test]
+fn test_serialize_bert_regex() {
+    let regex = BertRegex::new("^c(a*)t$", vec![RegexOption::Caseless]);
+
+    assert_eq!(
+        term_to_binary(&regex).unwrap(),
+        vec![
+            131,
+            104,                                         // tuple
+            4,                                           // length
+            100, 0, 4, 98, 101, 114, 116,                // "bert" as atom
+            100, 0, 5, 114, 101, 103, 101, 120,          // "regex" as atom
+            107, 0, 8, 94, 99, 40, 97, 42, 41, 116, 36,  // "^c(a*)t$"
+
+            108,                                         // list
+            0, 0, 0, 1,                                  // length
+
+            100,                                         // atom
+            0, 8,                                        // length
+            99, 97, 115, 101, 108, 101, 115, 115,        // "caseless"
+
+            106                                          // "nil" as atom
         ]
     )
 }
