@@ -1,6 +1,6 @@
 use byteorder::{BigEndian, WriteBytesExt};
 
-use types::{BERT_LABEL, BertTag};
+use super::types::{BERT_LABEL, BertTag};
 
 
 pub fn merge_terms(term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
