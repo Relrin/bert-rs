@@ -2,16 +2,11 @@
 name = "bert"
 version = "0.1.0"
 authors = ["Valeryi Savich <Relrin78@gmail.com>"]
-description = "BERT (Binary ERlang Term) serializer"
-repository = "https://github.com/Relrin/bert-rs"
-readme = "../README.md"
-keywords = ["serialization", "erlang", "bert", "term_to_binary"]
-license = "BSD-3-Clause"
 
 [dependencies]
-serde = "0.8.7"
-num = "0.1.34"
 byteorder = "0.5.3"
+serde = "0.8.6"
+num = "0.1.34"
 
 [dev-dependencies]
 serde_macros = "0.8.*"

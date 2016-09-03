@@ -1,16 +1,19 @@
+//! BERT serialization
+//!
+//! This module provides for BERT serialization with the type `Serializer`.
 use std::io;
 use std::vec::Vec;
 
 use byteorder::{BigEndian, WriteBytesExt};
 use serde::ser;
 
-use errors::{Error, Result};
-use types::{EXT_VERSION, BertTag};
-use utils::{
+use super::errors::{Error, Result};
+use super::types::{EXT_VERSION, BertTag};
+use super::utils::{
     merge_terms, str_to_binary, get_atom, get_nil, get_bert_nil,
     get_bert_atom, get_empty_tuple, get_small_tuple
 };
-use wrappers::{
+use super::wrappers::{
     BIGNUM_STRUCT_NAME, TIME_STRUCT_NAME, REGEX_STRUCT_NAME,
     REGEX_OPTION_ENUM_NAME
 };

@@ -7,7 +7,7 @@ use num::bigint::{Sign};
 use serde::bytes;
 use serde::ser;
 
-use types::{BertTag, BertBigInteger, BertTime, BertRegex};
+use super::types::{BertTag, BertBigInteger, BertTime, BertRegex};
 
 
 pub const BIGNUM_STRUCT_NAME: &'static str = "_BertBigNumber";

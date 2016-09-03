@@ -5,6 +5,7 @@ extern crate byteorder;
 extern crate num;
 extern crate serde;
 
+pub use deserializers::{Deserializer, binary_to_term};
 pub use errors::{Error, Result};
 pub use serializers::{Serializer, term_to_binary, to_vec, to_writer};
 pub use types::{
@@ -18,7 +19,7 @@ pub use utils::{
     get_small_tuple
 };
 
-
+mod deserializers;
 #[macro_use]
 mod enum_macro;
 mod errors;
