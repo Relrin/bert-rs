@@ -24,6 +24,8 @@ pub enum Error {
     InvalidTag,
     /// Passed type of value is not supported by BERT.
     UnsupportedType,
+    /// Version number has not specified or invalid.
+    InvalidVersionNumber,
     /// The data source contains trailing bytes after all values were read.
     TrailingBytes,
 }
@@ -38,6 +40,9 @@ impl StdError for Error {
             Error::Io(ref error) => StdError::description(error),
             Error::InvalidTag => "invalid tag",
             Error::UnsupportedType => "type is not supported by BERT",
+            Error::InvalidVersionNumber => {
+                "version number has not specified or invalid"
+            }
             Error::TrailingBytes => "unexpected trailing bytes",
         }
     }
