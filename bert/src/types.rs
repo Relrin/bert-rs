@@ -7,7 +7,7 @@ use std::{i32};
 use num::bigint::BigInt;
 
 pub const BERT_LABEL: &'static str = "bert";
-pub const EXT_VERSION: u8 = 131u8;
+pub const ETF_VERSION: u8 = 131u8;
 
 
 // The BERT encoding is identical to Erlang's external term format except that

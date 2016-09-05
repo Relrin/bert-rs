@@ -8,7 +8,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use serde::ser;
 
 use super::errors::{Error, Result};
-use super::types::{EXT_VERSION, BertTag};
+use super::types::{ETF_VERSION, BertTag};
 use super::utils::{
     merge_terms, str_to_binary, get_atom, get_nil, get_bert_nil,
     get_bert_atom, get_empty_tuple, get_small_tuple
@@ -36,7 +36,7 @@ struct BigNumSerializer<W>{
 
 impl<W> BigNumSerializer<W> where W: io::Write, {
     pub fn new(writer: W) -> BigNumSerializer<W> {
-        BigNumSerializer{writer: writer}
+        BigNumSerializer{ writer: writer }
     }
 }
 
@@ -331,7 +331,7 @@ struct RegexOptionSerializer<W>{
 
 impl<W> RegexOptionSerializer<W> where W: io::Write, {
     pub fn new(writer: W) -> RegexOptionSerializer<W> {
-        RegexOptionSerializer{writer: writer}
+        RegexOptionSerializer{ writer: writer }
     }
 }
 
@@ -645,7 +645,7 @@ pub struct Serializer<W>{
 
 impl<W> Serializer<W> where W: io::Write, {
     pub fn new(writer: W) -> Serializer<W> {
-        Serializer{writer: writer}
+        Serializer{ writer: writer }
     }
 
     /// Unwrap the `Writer` from the `Serializer`.
@@ -1178,7 +1178,7 @@ pub fn to_vec<T>(value: &T) -> Result<Vec<u8>> where T: ser::Serialize {
 pub fn term_to_binary<T> (
         value: &T
     ) -> Result<Vec<u8>> where T: ser::Serialize {
-    let mut binary = vec![EXT_VERSION];
+    let mut binary = vec![ETF_VERSION];
     let data = try!(to_vec(value));
     binary.extend(data.iter().clone());
     Ok(binary)

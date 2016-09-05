@@ -4,25 +4,15 @@
 use std::io::{self, Read};
 
 use byteorder::{BigEndian, ReadBytesExt};
-use serde::bytes::ByteBuf;
 use serde::de::{self, EnumVisitor, Visitor, Deserialize};
 
 use super::errors::{Error, Result};
-
-
-macro_rules! forward_deserialize {
-    ($($name:ident($($arg:ident: $ty:ty,)*);)*) => {
-        $(#[inline]
-        fn $name<V: Visitor>(&mut self, $($arg: $ty,)* visitor: V) -> Result<V::Value> {
-            self.deserialize(visitor)
-        })*
-    }
-}
+use super::types::{ETF_VERSION};
 
 
 pub struct Deserializer<R: Read> {
     reader: R,
-    first: Option<u8>,
+    header: Option<u8>,
 }
 
 
@@ -40,7 +30,7 @@ impl<R: Read> Deserializer<R> {
     pub fn new(reader: R) -> Deserializer<R> {
         Deserializer {
             reader: reader,
-            first: None,
+            header: None,
         }
     }
 
@@ -58,10 +48,32 @@ impl<R: Read> Deserializer<R> {
 
     #[inline]
     fn parse_value<V: Visitor>(&mut self, visitor: V) -> Result<V::Value> {
-        let first = self.first.unwrap();
-        self.first = None;
-        match first {
-            _ => unreachable!(),
+        let header = self.header.unwrap();
+        self.header = None;
+        match header {
+            97 => self.parse_unsigned_integer(header, visitor),
+            98 => self.parse_integer(header, visitor),
+            _ => Err(Error::InvalidTag)
+        }
+    }
+
+    #[inline]
+    fn parse_unsigned_integer<V: Visitor>(
+        &mut self, header: u8, mut visitor: V
+    ) -> Result<V::Value> {
+        match header {
+            97 => visitor.visit_u8(try!(self.read_u8())),
+            _ => Err(Error::InvalidTag)
+        }
+    }
+
+    #[inline]
+    fn parse_integer<V: Visitor>(
+        &mut self, header: u8, mut visitor: V
+    ) -> Result<V::Value> {
+        match header {
+            98 => visitor.visit_i32(try!(self.read_i32::<BigEndian>())),
+            _ => Err(Error::InvalidTag)
         }
     }
 }
@@ -98,27 +110,19 @@ impl<R: Read> de::Deserializer for Deserializer<R> {
         deserialize_struct(_name: &'static str, _fields: &'static [&'static str],);
         deserialize_struct_field();
         deserialize_ignored_any();
+        deserialize_option();
+        deserialize_newtype_struct(_name: &'static str,);
     );
 
     #[inline]
-    fn deserialize<V: Visitor>(
-        &mut self, visitor: V
-    ) -> Result<V::Value> {
-        Err(Error::UnsupportedType)
-    }
+    fn deserialize<V: Visitor>(&mut self, visitor: V) -> Result<V::Value> {
+        if self.header.is_none() {
+            self.header = Some(try!(self.read_u8()));
+        }
 
-    #[inline]
-    fn deserialize_option<V: Visitor>(
-        &mut self, mut visitor: V
-    ) -> Result<V::Value> {
-        Err(Error::UnsupportedType)
-    }
-
-    #[inline]
-    fn deserialize_newtype_struct<V>(
-        &mut self, _name: &'static str, mut visitor: V
-    ) -> Result<V::Value> where V: de::Visitor {
-        Err(Error::UnsupportedType)
+        let result = self.parse_value(visitor);
+        self.header = None;
+        result
     }
 
     #[inline]
@@ -131,21 +135,36 @@ impl<R: Read> de::Deserializer for Deserializer<R> {
 }
 
 
-fn from_trait<R, T>(read: R) -> Result<T>
-    where R: Read, T: de::Deserialize,
-{
-    let mut de = Deserializer::new(read);
-    let value = try!(de::Deserialize::deserialize(&mut de));
-
-    // Make sure the whole stream has been consumed.
-    try!(de.end());
-    Ok(value)
+/// Decodes a BERT value from a `std::io::Read`.
+#[inline]
+pub fn from_reader<T: Deserialize, R: Read>(mut reader: R) -> Result<T> {
+    let binary_header = try!(reader.read_u8());
+    if binary_header != ETF_VERSION {
+        let message = format!(
+            "Data should start from the {} version number.",
+            ETF_VERSION
+        );
+        Err(Error::Custom(message))
+    } else {
+        let mut de = Deserializer::new(reader);
+        let value = try!(Deserialize::deserialize(&mut de));
+        try!(de.end());
+        Ok(value)
+    }
 }
 
 
-/// Decode a BERT value from binary stream (`Vec<u8>`)
-pub fn binary_to_term<T>(value: Vec<u8>) -> Result<T>
+/// Decodes a BERT value from a `&[u8]` slice.
+#[inline]
+pub fn from_slice<T: Deserialize>(v: &[u8]) -> Result<T> {
+    from_reader(v)
+}
+
+
+/// Decode a BERT value from a binary stream (`&Vec<u8>`)
+#[inline]
+pub fn binary_to_term<T: Deserialize>(value: &Vec<u8>) -> Result<T>
     where T: de::Deserialize
 {
-    from_trait(value.as_slice())
+    from_slice(value.as_slice())
 }
