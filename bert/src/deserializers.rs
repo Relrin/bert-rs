@@ -82,37 +82,11 @@ impl<R: Read> Deserializer<R> {
 impl<R: Read> de::Deserializer for Deserializer<R> {
     type Error = Error;
 
-    forward_deserialize!(
-        deserialize_bool();
-        deserialize_isize();
-        deserialize_i8();
-        deserialize_i16();
-        deserialize_i32();
-        deserialize_i64();
-        deserialize_usize();
-        deserialize_u8();
-        deserialize_u16();
-        deserialize_u32();
-        deserialize_u64();
-        deserialize_f32();
-        deserialize_f64();
-        deserialize_char();
-        deserialize_str();
-        deserialize_string();
-        deserialize_bytes();
-        deserialize_unit();
-        deserialize_unit_struct(_name: &'static str,);
-        deserialize_seq();
-        deserialize_seq_fixed_size(_len: usize,);
-        deserialize_map();
-        deserialize_tuple_struct(_name: &'static str, _len: usize,);
-        deserialize_tuple(_len: usize,);
-        deserialize_struct(_name: &'static str, _fields: &'static [&'static str],);
-        deserialize_struct_field();
-        deserialize_ignored_any();
-        deserialize_option();
-        deserialize_newtype_struct(_name: &'static str,);
-    );
+    forward_to_deserialize! {
+        bool usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64 char
+        str string unit seq seq_fixed_size bytes option map unit_struct
+        tuple_struct struct struct_field tuple ignored_any newtype_struct
+    }
 
     #[inline]
     fn deserialize<V: Visitor>(&mut self, visitor: V) -> Result<V::Value> {
