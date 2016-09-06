@@ -3,6 +3,7 @@
 
 extern crate byteorder;
 extern crate num;
+#[macro_use]
 extern crate serde;
 
 pub use deserializers::{
@@ -27,9 +28,6 @@ pub use utils::{
 
 #[macro_use]
 mod enum_macro;
-
-#[macro_use]
-mod forward;
 
 mod deserializers;
 mod errors;
