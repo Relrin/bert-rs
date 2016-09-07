@@ -2,6 +2,7 @@ use std::error;
 use std::error::Error as StdError;
 use std::fmt;
 use std::io;
+use std::num::ParseFloatError;
 use std::result;
 use std::string::FromUtf8Error;
 
@@ -20,6 +21,8 @@ pub enum Error {
     Io(io::Error),
     /// Some error occured while converting a string.
     FromUtf8(FromUtf8Error),
+    /// Invalid float for a value encoded as string
+    InvalidFloat(ParseFloatError),
     /// Passed tag is invalid or not supported.
     InvalidTag,
     /// Passed type of value is not supported by BERT.
@@ -39,6 +42,7 @@ impl StdError for Error {
             Error::FromUtf8(ref error) => error.description(),
             Error::Io(ref error) => StdError::description(error),
             Error::InvalidTag => "invalid tag",
+            Error::InvalidFloat(_) => "Invalid float, encoded as string",
             Error::UnsupportedType => "type is not supported by BERT",
             Error::InvalidVersionNumber => {
                 "version number has not specified or invalid"
@@ -61,6 +65,9 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::Custom(ref s) => write!(f, "custom error: {}", s),
+            Error::InvalidFloat(ref value) => {
+                write!(f, "Invalid float '{}'.", value)
+            },
             _ => f.write_str(self.description()),
         }
     }
@@ -68,8 +75,8 @@ impl fmt::Display for Error {
 
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
+    fn from(error: io::Error) -> Error {
+        Error::Io(error)
     }
 }
 
@@ -77,6 +84,13 @@ impl From<io::Error> for Error {
 impl From<FromUtf8Error> for Error {
     fn from(error: FromUtf8Error) -> Error {
         Error::FromUtf8(error)
+    }
+}
+
+
+impl From<ParseFloatError> for Error {
+    fn from (error: ParseFloatError) -> Error {
+        Error::InvalidFloat(error)
     }
 }
 

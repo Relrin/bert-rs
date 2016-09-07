@@ -1,7 +1,9 @@
 //! BERT Deserialization
 //!
 //! This module provides for BERT deserialization with the type `Deserializer`.
+use std::{f32};
 use std::io::{self, Read};
+use std::str::FromStr;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde::de::{self, EnumVisitor, Visitor, Deserialize};
@@ -47,12 +49,40 @@ impl<R: Read> Deserializer<R> {
     }
 
     #[inline]
+    fn read_string(&mut self, len: usize) -> io::Result<String> {
+        let reader = self.reader.by_ref();
+        let mut string_buffer = String::with_capacity(len);
+        try!(reader.take(len as u64).read_to_string(&mut string_buffer));
+        string_buffer = string_buffer.replace("\u{0000}", "");
+        Ok(string_buffer)
+    }
+
+    #[inline]
     fn parse_value<V: Visitor>(&mut self, visitor: V) -> Result<V::Value> {
         let header = self.header.unwrap();
         self.header = None;
         match header {
+            70 | 99 => self.parse_float(header, visitor),
             97 => self.parse_unsigned_integer(header, visitor),
             98 => self.parse_integer(header, visitor),
+            _ => Err(Error::InvalidTag)
+        }
+    }
+
+    #[inline]
+    fn parse_float<V: Visitor>(
+        &mut self, header: u8, mut visitor: V
+    ) -> Result<V::Value> {
+        match header {
+            70 => {
+                let value = try!(self.read_f64::<BigEndian>());
+                visitor.visit_f64(value)
+            },
+            99 => {
+                let float_str = try!(self.read_string(31));
+                let value = try!(f32::from_str(&float_str));
+                visitor.visit_f64(value as f64)
+            },
             _ => Err(Error::InvalidTag)
         }
     }
