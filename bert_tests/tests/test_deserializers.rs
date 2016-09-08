@@ -1,5 +1,7 @@
 extern crate bert;
 
+use std::string::{String};
+
 use bert::{ETF_VERSION, binary_to_term};
 
 
@@ -10,7 +12,7 @@ fn test_deserialize_u8() {
     assert_eq!(
         100u8,
         binary_to_term(&data).unwrap()
-    )
+    );
 }
 
 
@@ -21,7 +23,7 @@ fn test_deserialize_i32() {
     assert_eq!(
         512i32,
         binary_to_term(&data).unwrap()
-    )
+    );
 }
 
 
@@ -32,7 +34,7 @@ fn test_deserialize_new_f64() {
     assert_eq!(
         3.14f64,
         binary_to_term(&data).unwrap()
-    )
+    );
 }
 
 
@@ -47,5 +49,24 @@ fn test_deserialize_old_f64() {
     assert_eq!(
         5.5f64,
         binary_to_term(&data).unwrap()
-    )
+    );
+}
+
+
+#[test]
+fn test_deserialize_atom() {
+    let data = vec![ETF_VERSION, 100, 0, 3, 110, 105, 108];
+
+    let result: String = binary_to_term(&data).unwrap();
+    assert_eq!("nil", result);
+
+}
+
+
+#[test]
+fn test_deserialize_string() {
+    let data = vec![ETF_VERSION, 107, 0, 4, 98, 101, 114, 116];
+
+    let result: String = binary_to_term(&data).unwrap();
+    assert_eq!("bert", result);
 }
