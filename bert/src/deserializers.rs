@@ -65,6 +65,8 @@ impl<R: Read> Deserializer<R> {
             70 | 99 => self.parse_float(header, visitor),
             97 => self.parse_unsigned_integer(header, visitor),
             98 => self.parse_integer(header, visitor),
+            100 => self.parse_atom(header, visitor),
+            107 => self.parse_string(header, visitor),
             _ => Err(Error::InvalidTag)
         }
     }
@@ -89,22 +91,34 @@ impl<R: Read> Deserializer<R> {
 
     #[inline]
     fn parse_unsigned_integer<V: Visitor>(
-        &mut self, header: u8, mut visitor: V
+        &mut self, _header: u8, mut visitor: V
     ) -> Result<V::Value> {
-        match header {
-            97 => visitor.visit_u8(try!(self.read_u8())),
-            _ => Err(Error::InvalidTag)
-        }
+        visitor.visit_u8(try!(self.read_u8()))
     }
 
     #[inline]
     fn parse_integer<V: Visitor>(
-        &mut self, header: u8, mut visitor: V
+        &mut self, _header: u8, mut visitor: V
     ) -> Result<V::Value> {
-        match header {
-            98 => visitor.visit_i32(try!(self.read_i32::<BigEndian>())),
-            _ => Err(Error::InvalidTag)
-        }
+        visitor.visit_i32(try!(self.read_i32::<BigEndian>()))
+    }
+
+    #[inline]
+    fn parse_atom<V: Visitor>(
+        &mut self, _header: u8, mut visitor: V
+    ) -> Result<V::Value> {
+        let length = try!(self.read_i16::<BigEndian>());
+        let string = try!(self.read_string(length as usize));
+        visitor.visit_string(string)
+    }
+
+    #[inline]
+    fn parse_string<V: Visitor>(
+        &mut self, _header: u8, mut visitor: V
+    ) -> Result<V::Value> {
+        let length = try!(self.read_i16::<BigEndian>());
+        let string = try!(self.read_string(length as usize));
+        visitor.visit_string(string)
     }
 }
 
