@@ -4,6 +4,7 @@
 use std::{f32};
 use std::io::{self, Read};
 use std::str::FromStr;
+use std::result;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde::de::{self, EnumVisitor, Visitor, Deserialize};
@@ -67,6 +68,7 @@ impl<R: Read> Deserializer<R> {
             98 => self.parse_integer(header, visitor),
             100 => self.parse_atom(header, visitor),
             107 => self.parse_string(header, visitor),
+            109 => self.parse_binary(header, visitor),
             _ => Err(Error::InvalidTag)
         }
     }
@@ -120,6 +122,86 @@ impl<R: Read> Deserializer<R> {
         let string = try!(self.read_string(length as usize));
         visitor.visit_string(string)
     }
+
+    #[inline]
+    fn parse_binary<V: Visitor>(
+        &mut self, _header: u8, mut visitor: V
+    ) -> Result<V::Value> {
+        let length = self.read_i32::<BigEndian>().unwrap() as usize;
+        visitor.visit_seq(BinarySeqVisitor::new(self, Some(length)))
+    }
+}
+
+
+struct BinarySeqVisitor<'a, R: 'a + Read> {
+    de: &'a mut Deserializer<R>,
+    length: Option<usize>
+}
+
+
+impl<'a, R: 'a + Read> BinarySeqVisitor<'a, R> {
+    #[inline]
+    fn new(de: &'a mut Deserializer<R>, length: Option<usize>) -> Self {
+        BinarySeqVisitor { de: de, length: length }
+    }
+}
+
+
+impl<'a, R: Read> de::SeqVisitor for BinarySeqVisitor<'a, R> {
+    type Error = Error;
+
+    fn visit<T: Deserialize>(&mut self) -> Result<Option<T>> {
+        match self.length {
+            Some(0) => return Ok(None),
+            Some(ref mut len) => *len -= 1,
+            _ => {}
+        };
+        match Deserialize::deserialize(self.de) {
+            Ok(value) => Ok(Some(value)),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn end(&mut self) -> Result<()> {
+        if let Some(0) = self.length {
+            Ok(())
+        } else {
+            Err(Error::TrailingBytes)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.length {
+            Some(len) => (len, self.length),
+            None => (0, Some(0))
+        }
+    }
+}
+
+
+impl<'a, R: Read> de::Visitor for BinarySeqVisitor<'a, R> {
+    type Value = Vec<u8>;
+
+    #[inline]
+    fn visit_unit<E>(&mut self) -> result::Result<Vec<u8>, E>
+        where E: de::Error,
+    {
+        Ok(Vec::new())
+    }
+
+    #[inline]
+    fn visit_seq<V>(&mut self, mut visitor: V) -> result::Result<Vec<u8>, V::Error>
+        where V: de::SeqVisitor,
+    {
+        let mut values = Vec::with_capacity(visitor.size_hint().0);
+
+        while let Some(value) = try!(visitor.visit()) {
+            values.push(value);
+        }
+
+        try!(visitor.end());
+        Ok(values)
+    }
 }
 
 
@@ -146,7 +228,7 @@ impl<R: Read> de::Deserializer for Deserializer<R> {
     #[inline]
     fn deserialize_enum<V: EnumVisitor>(
         &mut self, _enum: &'static str, _variants: &'static [&'static str],
-        mut visitor: V
+        mut _visitor: V
     ) -> Result<V::Value> {
         Err(Error::UnsupportedType)
     }
