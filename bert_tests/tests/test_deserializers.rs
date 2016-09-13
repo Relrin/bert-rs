@@ -70,3 +70,21 @@ fn test_deserialize_string() {
     let result: String = binary_to_term(&data).unwrap();
     assert_eq!("bert", result);
 }
+
+
+#[test]
+fn test_deserialize_binary() {
+    let data = vec![
+        ETF_VERSION,
+        109,         // binary
+        0, 0, 0, 5,  // length
+        118,         // "v"
+        97,          // "a"
+        108,         // "l"
+        117,         // "u"
+        101          // "e"
+    ];
+
+    let binary: String = binary_to_term(&data).unwrap();
+    assert_eq!("value", binary);
+}
