@@ -4,7 +4,6 @@
 use std::{f32};
 use std::io::{self, Read};
 use std::str::FromStr;
-use std::result;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde::de::{self, EnumVisitor, Visitor, Deserialize};
@@ -133,78 +132,6 @@ impl<R: Read> Deserializer<R> {
 }
 
 
-struct BinarySeqVisitor<'a, R: 'a + Read> {
-    de: &'a mut Deserializer<R>,
-    length: Option<usize>
-}
-
-
-impl<'a, R: 'a + Read> BinarySeqVisitor<'a, R> {
-    #[inline]
-    fn new(de: &'a mut Deserializer<R>, length: Option<usize>) -> Self {
-        BinarySeqVisitor { de: de, length: length }
-    }
-}
-
-
-impl<'a, R: Read> de::SeqVisitor for BinarySeqVisitor<'a, R> {
-    type Error = Error;
-
-    fn visit<T: Deserialize>(&mut self) -> Result<Option<T>> {
-        match self.length {
-            Some(0) => return Ok(None),
-            Some(ref mut len) => *len -= 1,
-            _ => {}
-        };
-        match Deserialize::deserialize(self.de) {
-            Ok(value) => Ok(Some(value)),
-            Err(e) => Err(e)
-        }
-    }
-
-    fn end(&mut self) -> Result<()> {
-        if let Some(0) = self.length {
-            Ok(())
-        } else {
-            Err(Error::TrailingBytes)
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        match self.length {
-            Some(len) => (len, self.length),
-            None => (0, Some(0))
-        }
-    }
-}
-
-
-impl<'a, R: Read> de::Visitor for BinarySeqVisitor<'a, R> {
-    type Value = Vec<u8>;
-
-    #[inline]
-    fn visit_unit<E>(&mut self) -> result::Result<Vec<u8>, E>
-        where E: de::Error,
-    {
-        Ok(Vec::new())
-    }
-
-    #[inline]
-    fn visit_seq<V>(&mut self, mut visitor: V) -> result::Result<Vec<u8>, V::Error>
-        where V: de::SeqVisitor,
-    {
-        let mut values = Vec::with_capacity(visitor.size_hint().0);
-
-        while let Some(value) = try!(visitor.visit()) {
-            values.push(value);
-        }
-
-        try!(visitor.end());
-        Ok(values)
-    }
-}
-
-
 impl<R: Read> de::Deserializer for Deserializer<R> {
     type Error = Error;
 
@@ -231,6 +158,66 @@ impl<R: Read> de::Deserializer for Deserializer<R> {
         mut _visitor: V
     ) -> Result<V::Value> {
         Err(Error::UnsupportedType)
+    }
+}
+
+
+struct BinarySeqVisitor<'a, R: 'a + Read> {
+    de: &'a mut Deserializer<R>,
+    length: Option<usize>
+}
+
+
+impl<'a, R: 'a + Read> BinarySeqVisitor<'a, R> {
+    #[inline]
+    fn new(de: &'a mut Deserializer<R>, length: Option<usize>) -> Self {
+        BinarySeqVisitor { de: de, length: length }
+    }
+}
+
+
+impl<'a, R: Read> de::Deserializer for BinarySeqVisitor<'a, R> {
+    type Error = Error;
+
+    fn deserialize<V>(&mut self, mut visitor: V) -> Result<V::Value>
+        where V: Visitor
+    {
+        visitor.visit_u8(try!(self.de.read_u8()))
+    }
+
+    forward_to_deserialize! {
+        bool usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64 char str string
+        unit option seq seq_fixed_size bytes map unit_struct newtype_struct
+        tuple_struct struct struct_field tuple enum ignored_any
+    }
+}
+
+
+impl<'a, R: Read> de::SeqVisitor for BinarySeqVisitor<'a, R> {
+    type Error = Error;
+
+    fn visit<T: Deserialize>(&mut self) -> Result<Option<T>> {
+        match self.length {
+            Some(0) => return Ok(None),
+            Some(ref mut len) => *len -= 1,
+            None => {}
+        };
+        Deserialize::deserialize(self).map(Some)
+    }
+
+    fn end(&mut self) -> Result<()> {
+        if let Some(0) = self.length {
+            Ok(())
+        } else {
+            Err(Error::TrailingBytes)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.length {
+            Some(len) => (len, self.length),
+            None => (0, Some(0))
+        }
     }
 }
 
