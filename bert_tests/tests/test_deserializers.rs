@@ -85,6 +85,6 @@ fn test_deserialize_binary() {
         101          // "e"
     ];
 
-    let binary: String = binary_to_term(&data).unwrap();
-    assert_eq!("value", binary);
+    let binary: Vec<u8> = binary_to_term(&data).unwrap();
+    assert_eq!(b"value", binary.as_slice());
 }
