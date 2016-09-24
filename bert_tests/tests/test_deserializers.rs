@@ -2,7 +2,7 @@ extern crate bert;
 
 use std::string::{String};
 
-use bert::{ETF_VERSION, binary_to_term};
+use bert::{ETF_VERSION, binary_to_term, BertBigInteger};
 
 
 #[test]
@@ -87,4 +87,19 @@ fn test_deserialize_binary() {
 
     let binary: Vec<u8> = binary_to_term(&data).unwrap();
     assert_eq!(b"value", binary.as_slice());
+}
+
+
+#[test]
+fn test_deserializer_big_number() {
+    let data = vec![
+        ETF_VERSION,
+        110,         // small big number
+        2,           // length
+        0,           // sign
+        232, 3       // 1000
+    ];
+
+    let big_small_number: BertBigInteger = binary_to_term(&data).unwrap();
+    assert_eq!(BigInt::from(1000i32), big_small_number)
 }
