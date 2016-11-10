@@ -9,8 +9,8 @@ serde = "0.8.3"
 num = "0.1.34"  
 byteorder = "0.5.3"  
 
-Example of using:
------------------
+Example of using
+----------------
 The bert-rs crate provide a support for default Rust types and some additional, which have specified in [BERT](http://bert-rpc.org/) document. For any supported type of data which should be serialized you will pass into `term_to_binary` function:
 
 ```rust
