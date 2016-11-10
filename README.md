@@ -43,6 +43,6 @@ fn main() {
 }
 ```
 
-*Note: At the moment bert-rs provide only serialize features. But bert-rs have the `serder-rs-deserializer` branch, where this library provide deserialize functionality. The part of required stuff is not implemented (because of issues with too complex and complicated approaches with deserializing): list, tuples, `BertBigNumber` and special kind of tuples which represented as `{bert, ...}`. If you want to help in further development, then feel free to open pull requests and issues.*
+**Note**: At the moment bert-rs provide only serialize features. But bert-rs have the `serder-rs-deserializer` branch, where this library provide deserialize functionality. The part of required stuff is not implemented (because of issues with too complex and complicated approaches with deserializing): list, tuples, `BertBigNumber` and special kind of tuples which represented as `{bert, ...}`. If you want to help in further development, then feel free to open pull requests and issues.
 
 
