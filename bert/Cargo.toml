@@ -6,7 +6,7 @@ description = "BERT (Binary ERlang Term) serializer"
 repository = "https://github.com/Relrin/bert-rs"
 readme = "../README.md"
 keywords = ["serialization", "erlang", "bert", "term_to_binary"]
-license = "BSD"
+license = "BSD-3-Clause"
 
 [dependencies]
 serde = "0.8.7"
