@@ -3,14 +3,22 @@
 
 extern crate byteorder;
 extern crate num;
+#[macro_use]
 extern crate serde;
 
+pub use deserializers::{
+    Deserializer,
+    binary_to_term, from_slice, from_reader
+};
 pub use errors::{Error, Result};
-pub use serializers::{Serializer, term_to_binary, to_vec, to_writer};
+pub use serializers::{
+    Serializer,
+    term_to_binary, to_vec, to_writer
+};
 pub use types::{
-    BERT_LABEL, EXT_VERSION,
+    BERT_LABEL, ETF_VERSION,
     BertTag, BertBigInteger, BertTime, BertRegex,
-    TimeStruct, RegexStruct, RegexOption
+    TimeStruct, RegexStruct, RegexOption,
 };
 pub use utils::{
     merge_terms, str_to_binary,
@@ -18,9 +26,10 @@ pub use utils::{
     get_small_tuple
 };
 
-
 #[macro_use]
 mod enum_macro;
+
+mod deserializers;
 mod errors;
 mod serializers;
 mod types;
