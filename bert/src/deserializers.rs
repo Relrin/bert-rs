@@ -4,17 +4,12 @@
 use std::{f32};
 use std::io::{self, Read};
 use std::str::FromStr;
-use std::result::Result as StdResult;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde::de::{self, EnumVisitor, Visitor, Deserialize};
 
 use super::errors::{Error, Result};
-use super::types::{ETF_VERSION, BertBigInteger};
-
-
-use num::bigint::{Sign, BigInt};
-use serde::{bytes, ser};
+use super::types::{ETF_VERSION};
 
 
 pub struct Deserializer<R: Read> {
@@ -54,13 +49,6 @@ impl<R: Read> Deserializer<R> {
     }
 
     #[inline]
-    fn read_exact(&mut self, len: u64) -> io::Result<Vec<u8>> {
-        let mut buf = Vec::with_capacity(len as usize);
-        try!(io::copy(&mut self.reader.take(len), &mut buf));
-        Ok(buf)
-    }
-
-    #[inline]
     fn read_string(&mut self, len: usize) -> io::Result<String> {
         let reader = self.reader.by_ref();
         let mut string_buffer = String::with_capacity(len);
@@ -80,7 +68,6 @@ impl<R: Read> Deserializer<R> {
             100 => self.parse_atom(header, visitor),
             107 => self.parse_string(header, visitor),
             109 => self.parse_binary(header, visitor),
-            110 | 111 => self.parse_big_integer(header, visitor),
             _ => Err(Error::InvalidTag)
         }
     }
@@ -141,13 +128,6 @@ impl<R: Read> Deserializer<R> {
     ) -> Result<V::Value> {
         let length = self.read_i32::<BigEndian>().unwrap() as usize;
         visitor.visit_seq(BinarySeqVisitor::new(self, Some(length)))
-    }
-
-    #[inline]
-    fn parse_big_integer<V: Visitor>(
-        &mut self, header: u8, mut visitor: V
-    ) -> Result<V::Value> {
-        visitor.visit_newtype_struct(BertBigNumberVisitor::new(self, header))
     }
 }
 
@@ -238,54 +218,6 @@ impl<'a, R: Read> de::SeqVisitor for BinarySeqVisitor<'a, R> {
             Some(len) => (len, self.length),
             None => (0, Some(0))
         }
-    }
-}
-
-
-struct BertBigNumberVisitor<'a, R: 'a + Read> {
-    de: &'a mut Deserializer<R>,
-    header: u8,
-}
-
-
-impl<'a, R: 'a + Read> BertBigNumberVisitor<'a, R> {
-    #[inline]
-    fn new(de: &'a mut Deserializer<R>, header: u8) -> Self {
-        BertBigNumberVisitor { de: de, header: header }
-    }
-}
-
-
-impl<'a, R: 'a + Read> de::Visitor for BertBigNumberVisitor<'a, R> {
-    type Value = BertBigInteger;
-
-    #[inline]
-    fn visit_newtype_struct<D>(&mut self, _: &mut D) -> StdResult<BertBigInteger, D::Error>
-        where D: de::Deserializer
-    {
-        let n = match self.header {
-            110 => try!(self.de.read_u8()),
-            111 => try!(self.de.read_u32::<BigEndian>())
-        };
-        let sign_int = try!(self.de.read_u8());
-        let sign = match sign_int {
-            0 => Sign::Plus,
-            _ => Sign::Minus
-        };
-        let bytes = try!(self.de.read_exact(n as u64));
-        let bigint = BigInt::from_bytes_le(sign, bytes.as_ref());
-        Ok(BertBigInteger(bigint))
-    }
-}
-
-
-impl Deserialize for BertBigInteger {
-    fn deserialize<D>(deserializer: &mut D) -> StdResult<BertBigInteger, D::Error>
-        where D: de::Deserializer
-    {
-        deserializer.deserialize_newtype_struct(
-            self, BertBigNumberVisitor::new(deserializer, deserializer.header)
-        )
     }
 }
 
