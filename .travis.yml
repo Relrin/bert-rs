@@ -1,8 +1,12 @@
 language: rust
-sudo: required
+env:
+  - PATH=$PATH:$HOME/.cargo/bin
+matrix:
+  allow_failures:
+    - rust: nightly
 install:
-  - sudo curl -sS https://static.rust-lang.org/rustup.sh | sudo bash /dev/stdin --yes
+  - curl -sSf https://sh.rustup.rs | sh -s -- -y
   - rustup install nightly
-script: 
+script:
   - make build
   - make test
