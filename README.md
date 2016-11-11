@@ -11,7 +11,7 @@ byteorder = "0.5.3"
 
 License
 -------
-The aiorest-ws published under BSD license. For more details read [LICENSE](https://github.com/Relrin/bert-rs/blob/master/LICENSE) file.
+The bert-rs published under BSD license. For more details read [LICENSE](https://github.com/Relrin/bert-rs/blob/master/LICENSE) file.
 
 Example of using
 ----------------
