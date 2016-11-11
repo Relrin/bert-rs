@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Valeryi Savich <Relrin78@gmail.com>"]
 description = "BERT (Binary ERlang Term) serializer"
 repository = "https://github.com/Relrin/bert-rs"
-readme = "README.md"
+readme = "../README.md"
 keywords = ["serialization", "erlang", "external term format", "bert", "term_to_binary"]
 license = "BSD"
 
