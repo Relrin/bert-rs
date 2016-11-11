@@ -1,7 +1,5 @@
 language: rust
 before_install:
-  - sudo curl -sS https://static.rust-lang.org/rustup.sh | bash /dev/stdin --yes
-install:
-  - rustup install nightly
+  - sudo curl -sS https://static.rust-lang.org/rustup.sh | sudo sh -s -- --channel=nightly --yes --
 script:
   - make test
