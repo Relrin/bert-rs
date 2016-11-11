@@ -5,9 +5,12 @@ This crate provide an access to serializing data to the special binary data form
 
 Dependencies
 ------------
-serde = "0.8.3"  
-num = "0.1.34"  
-byteorder = "0.5.3"  
+For a work with bert-rs you will need few libraries, which should be specified at your `Cargo.toml` file:
+```
+serde = "0.8.7"
+num = "0.1.34"
+byteorder = "0.5.3"
+```
 
 License
 -------
@@ -49,4 +52,7 @@ fn main() {
 
 **Note**: At the moment bert-rs provide only serialize features. But bert-rs have the `serder-rs-deserializer` branch, where this library provide deserialize functionality. The part of required stuff is not implemented (because of issues with too complicated approaches of deserializing): list, tuples, `BertBigInteger` and special kind of tuples which represented as `{bert, ...}`. If you want to help in further development, then feel free to open pull requests and issues.
 
-
+For development used:
+- rustup toolchain
+- stable `rustc 1.11.0 (9b21dcd6a 2016-08-15)` for building releases
+- unstable `rustc 1.13.0-nightly (3c5a0fa45 2016-08-22)` for testing
