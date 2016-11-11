@@ -1,8 +1,8 @@
 language: rust
 before_install:
-  - curl -sS https://static.rust-lang.org/rustup.sh > rustup.sh
-  - chmod +x ./rustup.sh
-  - ./rustup.sh --yes
+  - sudo curl -sS https://static.rust-lang.org/rustup.sh > rustup.sh
+  - sudo chmod +x ./rustup.sh
+  - sudo ./rustup.sh --yes
 install:
   - rustup install nightly
 script: 
