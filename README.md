@@ -5,11 +5,22 @@ This crate provide an access to serializing data to the special binary data form
 
 Dependencies
 ------------
-For a work with bert-rs you will need few libraries, which should be specified at your `Cargo.toml` file:
-```
+```toml
+[dependencies]
 serde = "0.8.7"
 num = "0.1.34"
 byteorder = "0.5.3"
+
+[dev-dependencies]
+serde_macros = "0.8.*"
+```
+
+Using
+-----
+Before you start working with this library you will need to add a link to the bert-rs library at your Cargo.toml file:
+```toml
+[dependencies]
+bert = "0.1.0"
 ```
 
 License
