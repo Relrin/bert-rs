@@ -1,5 +1,5 @@
 # bert-rs
-BERT (Binary ERlang Term) serializer [![Build Status](https://travis-ci.org/Relrin/bert-rs.svg?branch=master)](https://travis-ci.org/Relrin/bert-rs)
+BERT (Binary ERlang Term) serializer [![Build Status](https://travis-ci.org/Relrin/bert-rs.svg?branch=master)](https://travis-ci.org/Relrin/bert-rs) [![Create version](https://img.shields.io/crates/v/bert.svg)](https://travis-ci.org/Relrin/bert-rs)
 
 This crate provide an access to serializing data to the special binary data format, which can be send to your Erlang programs. The implementation relies on the [BERT](http://bert-rpc.org/) and [Erlang External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html) specifications.
 
