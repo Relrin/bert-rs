@@ -1,12 +1,16 @@
 language: rust
+sudo: required
+dist: trusty
+services:
+  - docker
 env:
   - PATH=$PATH:$HOME/.cargo/bin
-matrix:
-  allow_failures:
-    - rust: nightly
 install:
   - curl -sSf https://sh.rustup.rs | sh -s -- -y
   - rustup install nightly
+matrix:
+  allow_failures:
+    - rust: nightly
 script:
   - make build
   - make test
