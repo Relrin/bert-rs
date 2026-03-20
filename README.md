@@ -65,5 +65,5 @@ fn main() {
 
 For development used:
 - rustup toolchain
-- stable `rustc 1.11.0 (9b21dcd6a 2016-08-15)` for building releases
-- unstable `rustc 1.13.0-nightly (3c5a0fa45 2016-08-22)` for testing
+- stable `rustc 1.93.1 (083ac5135 2025-12-15)` for building releases
+- unstable `rustc 1.96.0-nightly (bcf3d36c9 2026-03-19)` for testing
