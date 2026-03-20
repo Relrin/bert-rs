@@ -1,26 +1,16 @@
 [package]
 name = "bert"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Valeryi Savich <Relrin78@gmail.com>"]
-<<<<<<< Updated upstream
-
-[dependencies]
-byteorder = "0.5.3"
-serde = "0.8.7"
-num = "0.1.34"
-=======
 description = "BERT (Binary ERlang Term) serializer"
 repository = "https://github.com/Relrin/bert-rs"
-readme = "../README.md"
+readme = "README.md"
 keywords = ["serialization", "erlang", "bert", "term_to_binary"]
 license = "BSD-3-Clause"
 edition = "2024"
 
 [dependencies]
-serde = "1.0.228"
-num = "0.4.3"
-byteorder = "1.5.0"
->>>>>>> Stashed changes
-
-[dev-dependencies]
-serde_macros = "0.8.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_bytes = "0.11"
+num = "0.4"
+byteorder = "1.5"

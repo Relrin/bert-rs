@@ -1,10 +1,12 @@
-#![cfg_attr(test, feature(plugin, custom_derive))]
-#![cfg_attr(test, plugin(serde_macros))]
-
-extern crate byteorder;
-extern crate num;
 #[macro_use]
-extern crate serde;
+mod enum_macro;
+
+pub mod deserializers;
+pub mod errors;
+pub mod serializers;
+pub mod types;
+pub mod wrappers;
+pub mod utils;
 
 pub use deserializers::{
     Deserializer,
@@ -25,13 +27,3 @@ pub use utils::{
     get_atom, get_nil, get_bert_nil, get_bert_atom, get_empty_tuple,
     get_small_tuple
 };
-
-#[macro_use]
-mod enum_macro;
-
-mod deserializers;
-mod errors;
-mod serializers;
-mod types;
-mod wrappers;
-mod utils;

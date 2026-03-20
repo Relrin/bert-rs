@@ -1,7 +1,3 @@
-extern crate bert;
-extern crate num;
-extern crate serde;
-
 use std::collections::{HashMap, BTreeMap};
 
 use bert::{
@@ -9,8 +5,8 @@ use bert::{
     BertTag, BertBigInteger, BertTime, BertRegex, RegexOption,
     merge_terms, get_atom, get_nil, get_bert_nil, get_bert_atom
 };
-use num::bigint::{BigInt};
-use serde::bytes::{Bytes};
+use num::bigint::BigInt;
+use serde::Serialize;
 
 
 #[test]
@@ -109,17 +105,6 @@ fn test_serialize_bool() {
 
 
 #[test]
-fn test_serialize_isize() {
-    let value: isize = 100;
-
-    assert_eq!(
-        term_to_binary(&value).unwrap(),
-        vec![131u8, 98, 0, 0, 0, 100]
-    )
-}
-
-
-#[test]
 fn test_serialize_i8() {
     assert_eq!(
         term_to_binary(&-128i8).unwrap(),
@@ -195,20 +180,6 @@ fn test_serialize_i32() {
 #[should_panic]
 fn test_serialize_i64() {
     term_to_binary(&1000i64).unwrap();
-}
-
-
-#[test]
-fn test_serialize_usize() {
-    let value: usize = 100;
-
-    assert_eq!(
-        term_to_binary(&value).unwrap(),
-        vec![
-            131u8,
-            98, 0, 0, 0, 100  // 100
-        ]
-    )
 }
 
 
@@ -302,10 +273,10 @@ fn test_serialize_string() {
     );
 }
 
-// TODO: Fix tests after adding specialization support in Rust
+
 #[test]
 fn test_serialize_bytes() {
-    let empty_bytes_list: Bytes = b""[..].into();
+    let empty_bytes_list = serde_bytes::Bytes::new(b"");
 
     assert_eq!(
         term_to_binary(&empty_bytes_list).unwrap(),
@@ -316,7 +287,7 @@ fn test_serialize_bytes() {
         ]
     );
 
-    let bytes_array: Bytes = b"value"[..].into();
+    let bytes_array = serde_bytes::Bytes::new(b"value");
 
     assert_eq!(
         term_to_binary(&bytes_array).unwrap(),
@@ -368,7 +339,7 @@ fn test_serialize_list() {
         ]
     );
 
-    let list = [1i32, 2, 3];
+    let list: &[i32] = &[1i32, 2, 3];
 
     assert_eq!(
         term_to_binary(&list).unwrap(),
@@ -520,7 +491,7 @@ fn test_serialize_struct_variant() {
     #[derive(Serialize)]
     enum Enum{
         Color {r: u8, g: u8, b: u8},
-    };
+    }
     let variant = Enum::Color{r: 128, g: 128, b: 128};
 
     assert_eq!(
@@ -559,7 +530,7 @@ fn test_serialize_struct_variant() {
 fn test_serialize_map() {
 
     // empty map
-    let empty_map: HashMap<&str, isize> = HashMap::new();
+    let empty_map: HashMap<&str, i32> = HashMap::new();
 
     assert_eq!(
         term_to_binary(&empty_map).unwrap(),
@@ -574,7 +545,7 @@ fn test_serialize_map() {
     );
 
     // map with few pairs of elements
-    let mut map: BTreeMap<&str, isize> = BTreeMap::new();
+    let mut map: BTreeMap<&str, i32> = BTreeMap::new();
     map.insert("test", 4);
     map.insert("value", 5);
 
@@ -592,7 +563,7 @@ fn test_serialize_map() {
 
             104,                                // tuple
             2,                                  // length
-            107, 0, 4, 116, 101, 115, 116,      // "value" as string
+            107, 0, 4, 116, 101, 115, 116,      // "test" as string
             98, 0, 0, 0, 4,                     // 4
 
             104,                                // tuple

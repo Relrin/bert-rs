@@ -1,12 +1,10 @@
 // For more information about basic "External Term Format" types you can read
 // on the next page: http://erlang.org/doc/apps/erts/erl_ext_dist.html
-use std::string::String;
 use std::ops::Deref;
-use std::{i32};
 
 use num::bigint::BigInt;
 
-pub const BERT_LABEL: &'static str = "bert";
+pub const BERT_LABEL: &str = "bert";
 pub const ETF_VERSION: u8 = 131u8;
 
 
@@ -51,10 +49,10 @@ pub struct BertTime(TimeStruct);
 impl BertTime {
     pub fn new(megaseconds: i32, seconds: i32, microseconds: i32) -> BertTime {
         BertTime(
-            TimeStruct{
-                megaseconds: megaseconds,
-                seconds: seconds,
-                microseconds: microseconds
+            TimeStruct {
+                megaseconds,
+                seconds,
+                microseconds,
             }
         )
     }
@@ -84,9 +82,9 @@ pub struct BertRegex(RegexStruct);
 impl BertRegex {
     pub fn new(source: &str, options: Vec<RegexOption>) -> BertRegex {
         BertRegex(
-            RegexStruct{
+            RegexStruct {
                 source: source.to_string(),
-                options: options,
+                options,
             }
         )
     }
