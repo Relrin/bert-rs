@@ -1,11 +1,11 @@
 use byteorder::{BigEndian, WriteBytesExt};
 
-use types::{BERT_LABEL, BertTag};
+use crate::types::{BERT_LABEL, BertTag};
 
 
 pub fn merge_terms(term_1: Vec<u8>, term_2: Vec<u8>) -> Vec<u8> {
-    let mut binary = term_1.clone();
-    binary.extend(term_2.iter().clone());
+    let mut binary = term_1;
+    binary.extend(term_2.iter());
     binary
 }
 
@@ -15,7 +15,7 @@ pub fn str_to_binary(data: &str) -> Vec<u8> {
     let binary_length = binary_string.len() as i16;
     let mut binary = vec![];
     binary.write_i16::<BigEndian>(binary_length).unwrap();
-    binary.extend(binary_string.iter().clone());
+    binary.extend(binary_string.iter());
     binary
 }
 
@@ -38,8 +38,8 @@ pub fn get_bert_nil() -> Vec<u8> {
     let nil_atom = get_atom("nil");
 
     let mut binary = vec![];
-    binary.extend(bert_atom.iter().clone());
-    binary.extend(nil_atom.iter().clone());
+    binary.extend(bert_atom.iter());
+    binary.extend(nil_atom.iter());
     get_small_tuple(2, binary)
 }
 

@@ -1,31 +1,15 @@
 # bert-rs
 BERT (Binary ERlang Term) serializer
 
-This crate provide an access to serializing data to the special binary data format, which can be send to your Erlang programs. The implementation relies on the [BERT](http://bert-rpc.org/) and [Erlang External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html) specifications.
-
-Dependencies
-------------
-```toml
-[dependencies]
-serde = "0.8.7"
-num = "0.1.34"
-byteorder = "0.5.3"
-
-[dev-dependencies]
-serde_macros = "0.8.*"
-```
+This crate provide access to serializing data to the special binary data format, which can be send to your Erlang programs. The implementation relies on the [BERT](http://bert-rpc.org/) and [Erlang External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html) specifications.
 
 Using
 -----
 Before you start working with this library you will need to add a link to the bert-rs library at your Cargo.toml file:
 ```toml
 [dependencies]
-bert = "0.1.0"
+bert = "0.2.0"
 ```
-
-License
--------
-The bert-rs published under BSD license. For more details read [LICENSE](https://github.com/Relrin/bert-rs/blob/master/LICENSE) file.
 
 Example of using
 ----------------
@@ -61,9 +45,6 @@ fn main() {
 }
 ```
 
-**Note**: At the moment bert-rs provide only serialize features. But bert-rs have the `serder-rs-deserializer` branch, where this library provide deserialize functionality. The part of required stuff is not implemented (because of issues with too complicated approaches of deserializing): list, tuples, `BertBigInteger` and special kind of tuples which represented as `{bert, ...}`. If you want to help in further development, then feel free to open pull requests and issues.
-
-For development used:
-- rustup toolchain
-- stable `rustc 1.11.0 (9b21dcd6a 2016-08-15)` for building releases
-- unstable `rustc 1.13.0-nightly (3c5a0fa45 2016-08-22)` for testing
+License
+-------
+The bert-rs published under BSD license. For more details read [LICENSE](https://github.com/Relrin/bert-rs/blob/master/LICENSE) file.
