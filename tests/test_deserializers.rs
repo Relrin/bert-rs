@@ -7,9 +7,6 @@ use bert::{
 use num::bigint::BigInt;
 use serde::Deserialize;
 
-
-// ─── Existing primitive deserialization tests ────────────────────────────────
-
 #[test]
 fn test_deserialize_u8() {
     let data = vec![ETF_VERSION, 97, 100];
@@ -69,9 +66,6 @@ fn test_deserialize_binary() {
     assert_eq!(b"value", binary.as_slice());
 }
 
-
-// ─── Bool deserialization ────────────────────────────────────────────────────
-
 #[test]
 fn test_deserialize_bool_true() {
     let data = vec![
@@ -95,9 +89,6 @@ fn test_deserialize_bool_false() {
     assert_eq!(false, binary_to_term(&data).unwrap());
 }
 
-
-// ─── List deserialization ────────────────────────────────────────────────────
-
 #[test]
 fn test_deserialize_list_i32() {
     let data = vec![
@@ -113,7 +104,6 @@ fn test_deserialize_list_i32() {
     assert_eq!(vec![1, 2, 3], result);
 }
 
-
 #[test]
 fn test_deserialize_list_string() {
     let data = vec![
@@ -127,9 +117,6 @@ fn test_deserialize_list_string() {
     let result: Vec<String> = binary_to_term(&data).unwrap();
     assert_eq!(vec!["hello".to_string(), "world".to_string()], result);
 }
-
-
-// ─── Tuple deserialization ───────────────────────────────────────────────────
 
 #[test]
 fn test_deserialize_small_tuple() {
@@ -145,9 +132,6 @@ fn test_deserialize_small_tuple() {
     assert_eq!((1u8, 4i32, 8.1516f64), result);
 }
 
-
-// ─── Map deserialization ─────────────────────────────────────────────────────
-
 #[test]
 fn test_deserialize_map_empty() {
     let data = vec![
@@ -160,7 +144,6 @@ fn test_deserialize_map_empty() {
     let result: BTreeMap<String, i32> = binary_to_term(&data).unwrap();
     assert!(result.is_empty());
 }
-
 
 #[test]
 fn test_deserialize_map() {
@@ -189,9 +172,6 @@ fn test_deserialize_map() {
     expected.insert("value".to_string(), 5);
     assert_eq!(expected, result);
 }
-
-
-// ─── Struct deserialization ──────────────────────────────────────────────────
 
 #[test]
 fn test_deserialize_struct() {
@@ -224,9 +204,6 @@ fn test_deserialize_struct() {
     assert_eq!(Color { r: 128, g: 64, b: 32 }, result);
 }
 
-
-// ─── BigNum deserialization ──────────────────────────────────────────────────
-
 #[test]
 fn test_deserialize_small_bignum_positive() {
     let data = vec![
@@ -254,9 +231,6 @@ fn test_deserialize_small_bignum_negative() {
     assert_eq!(BertBigInteger(BigInt::from(-1000i32)), result);
 }
 
-
-// ─── BertTime deserialization ────────────────────────────────────────────────
-
 #[test]
 fn test_deserialize_bert_time() {
     let data = vec![
@@ -271,9 +245,6 @@ fn test_deserialize_bert_time() {
     let result: BertTime = binary_to_term(&data).unwrap();
     assert_eq!(BertTime::new(1255, 295581, 446228), result);
 }
-
-
-// ─── BertRegex deserialization ───────────────────────────────────────────────
 
 #[test]
 fn test_deserialize_bert_regex() {
@@ -293,9 +264,6 @@ fn test_deserialize_bert_regex() {
     assert_eq!(BertRegex::new("^c(a*)t$", vec![RegexOption::Caseless]), result);
 }
 
-
-// ─── Option deserialization ──────────────────────────────────────────────────
-
 #[test]
 fn test_deserialize_option_none() {
     let data = vec![ETF_VERSION, 106]; // Nil
@@ -303,16 +271,12 @@ fn test_deserialize_option_none() {
     assert_eq!(None, result);
 }
 
-
 #[test]
 fn test_deserialize_option_some() {
     let data = vec![ETF_VERSION, 98, 0, 0, 0, 42];
     let result: Option<i32> = binary_to_term(&data).unwrap();
     assert_eq!(Some(42), result);
 }
-
-
-// ─── Round-trip tests (serialize → deserialize) ──────────────────────────────
 
 #[test]
 fn test_roundtrip_bool() {
@@ -323,13 +287,11 @@ fn test_roundtrip_bool() {
     assert_eq!(false, binary_to_term::<bool>(&data).unwrap());
 }
 
-
 #[test]
 fn test_roundtrip_u8() {
     let data = term_to_binary(&42u8).unwrap();
     assert_eq!(42u8, binary_to_term(&data).unwrap());
 }
-
 
 #[test]
 fn test_roundtrip_i32() {
@@ -337,13 +299,11 @@ fn test_roundtrip_i32() {
     assert_eq!(-12345i32, binary_to_term(&data).unwrap());
 }
 
-
 #[test]
 fn test_roundtrip_f64() {
     let data = term_to_binary(&3.14159f64).unwrap();
     assert_eq!(3.14159f64, binary_to_term(&data).unwrap());
 }
-
 
 #[test]
 fn test_roundtrip_string() {
@@ -351,7 +311,6 @@ fn test_roundtrip_string() {
     let result: String = binary_to_term(&data).unwrap();
     assert_eq!("hello world", result);
 }
-
 
 #[test]
 fn test_roundtrip_bytes() {
@@ -361,7 +320,6 @@ fn test_roundtrip_bytes() {
     assert_eq!(bytes, result);
 }
 
-
 #[test]
 fn test_roundtrip_list() {
     let list: &[i32] = &[10, 20, 30];
@@ -370,7 +328,6 @@ fn test_roundtrip_list() {
     assert_eq!(vec![10, 20, 30], result);
 }
 
-
 #[test]
 fn test_roundtrip_tuple() {
     let tuple = (1u8, 2i32, 3.0f64);
@@ -378,7 +335,6 @@ fn test_roundtrip_tuple() {
     let result: (u8, i32, f64) = binary_to_term(&data).unwrap();
     assert_eq!(tuple, result);
 }
-
 
 #[test]
 fn test_roundtrip_map() {
@@ -389,7 +345,6 @@ fn test_roundtrip_map() {
     let result: BTreeMap<String, i32> = binary_to_term(&data).unwrap();
     assert_eq!(map, result);
 }
-
 
 #[test]
 fn test_roundtrip_struct() {
@@ -405,7 +360,6 @@ fn test_roundtrip_struct() {
     assert_eq!(point, result);
 }
 
-
 #[test]
 fn test_roundtrip_bignum() {
     let positive = BertBigInteger(BigInt::from(123456789i64));
@@ -419,7 +373,6 @@ fn test_roundtrip_bignum() {
     assert_eq!(negative, result);
 }
 
-
 #[test]
 fn test_roundtrip_bert_time() {
     let time = BertTime::new(1255, 295581, 446228);
@@ -427,7 +380,6 @@ fn test_roundtrip_bert_time() {
     let result: BertTime = binary_to_term(&data).unwrap();
     assert_eq!(time, result);
 }
-
 
 #[test]
 fn test_roundtrip_bert_regex() {
@@ -437,7 +389,6 @@ fn test_roundtrip_bert_regex() {
     assert_eq!(regex, result);
 }
 
-
 #[test]
 fn test_roundtrip_option_none() {
     let val: Option<i32> = None;
@@ -445,7 +396,6 @@ fn test_roundtrip_option_none() {
     let result: Option<i32> = binary_to_term(&data).unwrap();
     assert_eq!(None, result);
 }
-
 
 #[test]
 fn test_roundtrip_option_some() {
@@ -455,9 +405,6 @@ fn test_roundtrip_option_some() {
     assert_eq!(Some(42), result);
 }
 
-
-// ─── Error case tests ───────────────────────────────────────────────────────
-
 #[test]
 fn test_error_invalid_version() {
     let data = vec![0, 97, 100]; // wrong version byte
@@ -465,14 +412,12 @@ fn test_error_invalid_version() {
     assert!(result.is_err());
 }
 
-
 #[test]
 fn test_error_invalid_tag() {
     let data = vec![ETF_VERSION, 255]; // unknown tag
     let result = binary_to_term::<u8>(&data);
     assert!(result.is_err());
 }
-
 
 #[test]
 fn test_error_trailing_bytes() {
